@@ -4,6 +4,8 @@ import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.Command;
 import com.daviipkp.smartsteve.model.ChatMessage;
 import com.daviipkp.smartsteve.repository.ChatRepository;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
@@ -31,6 +33,9 @@ public class DualBrainService {
     private final List<Command> commands = new ArrayList<>();
     private final VoiceService voiceService;
     private final EarService earService;
+    @Getter
+    @Setter
+    private static boolean voiceTyping = false;
     List<String> commandNames;
 
     @Value("${google.api.key}")
@@ -49,6 +54,14 @@ public class DualBrainService {
             }
             return true;
             }, "OPEN_YOUTUBE_WEBSITE"));
+        commands.add(new Command(() -> {
+            setVoiceTyping(true);
+            return true;
+        }, "START_VOICE_TYPING"));
+        commands.add(new Command(() -> {
+            setVoiceTyping(false);
+            return true;
+        }, "STOP_VOICE_TYPING"));
         commandNames = commands.stream()
                 .map(Command::getCMD_ID)
                 .toList();
@@ -69,9 +82,7 @@ public class DualBrainService {
         CompletableFuture.allOf(futureIntent, futureLocalResponse).join();
 
         String intent = futureIntent.get();
-        if(commandNames.contains(intent)) {
-            commands.get(commandNames.indexOf(intent)).execute();
-        }
+
         String localResponse = futureLocalResponse.get();
 
         if(Constants.DEBUG) {
@@ -96,6 +107,9 @@ public class DualBrainService {
         }
         earService.stopListening();
         voiceService.speak(localResponse, () -> {
+            if(commandNames.contains(intent)) {
+                commands.get(commandNames.indexOf(intent)).execute();
+            }
             earService.resumeListening();
         });
 
@@ -213,6 +227,7 @@ public class DualBrainService {
             return "CHAT_NORMAL";
         }
     }
+
 
 }
 

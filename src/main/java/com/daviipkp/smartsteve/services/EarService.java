@@ -1,21 +1,25 @@
 package com.daviipkp.smartsteve.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.springframework.stereotype.Service;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
+import java.util.List;
 
 @Service
 public class EarService {
 
+    private final KeyboardService kb;
     private final DualBrainService brain;
     private TargetDataLine microphone;
     private boolean isRunning = true;
     private volatile boolean isPaused = false;
 
-    public EarService(DualBrainService brain) {
+    public EarService(KeyboardService kb, DualBrainService brain) {
+        this.kb = kb;
         this.brain = brain;
         new Thread(this::startListening).start();
     }
@@ -66,19 +70,39 @@ public class EarService {
 
                 bytesRead = microphone.read(buffer, 0, buffer.length);
 
-                if (bytesRead > 0) {
-                    if (recognizer.acceptWaveForm(buffer, bytesRead)) {
-                        String jsonResult = recognizer.getResult();
-                        String text = extractTextFromVosk(jsonResult);
 
-                        if (!text.trim().isEmpty()) {
-                            System.out.println("User said: " + text);
 
-                            stopListening();
+                if(bytesRead > 0) {
+                    if(DualBrainService.isVoiceTyping()) {
+                        if(!recognizer.acceptWaveForm(buffer, bytesRead)) {
 
-                            brain.processCommand(text);
+                        }
+                        else {
+
+                            String jsonResult = recognizer.getResult();
+                            String text = extractTextFromVosk(jsonResult);
+                            if(text.contains("stop")) {
+                                DualBrainService.setVoiceTyping(false);
+                                continue;
+                            }
+                            kb.typeText(text);
+
+                        }
+                    }else{
+                        if (recognizer.acceptWaveForm(buffer, bytesRead)) {
+                            String jsonResult = recognizer.getResult();
+                            String text = extractTextFromVosk(jsonResult);
+
+                            if (!text.trim().isEmpty()) {
+                                System.out.println("User said: " + text);
+
+                                stopListening();
+
+                                brain.processCommand(text);
+                            }
                         }
                     }
+
                 }
             }
         } catch (Exception e) {

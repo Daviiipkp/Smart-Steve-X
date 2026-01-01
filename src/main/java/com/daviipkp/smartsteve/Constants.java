@@ -33,6 +33,8 @@ public class Constants {
     3. MAX LENGTH: 1 sentence or 10 words.
     4. NO FILLER WORDS. Do not say "Sure", "Okay", "I can help".
     6. Be precise. Check if user want a command and if it exists. Check if he has a question AND DEFINE THE BEST WAY TO ANSWER.
+    7. Never EVER send the command name in the answer. You JUST NEED TO CHECK. DON'T SEND COMMAND NAMES IN THE ANSWER LIKE [START_SOMETHING]
+    8. If the question is just one word like "huh" or "but", don't answer anything and treat it like a system error. ONLY ANSWER IF THERE'S A SPECIFIC REQUISITION.
     Command List: "%s"
     USER INPUT: """;
 
