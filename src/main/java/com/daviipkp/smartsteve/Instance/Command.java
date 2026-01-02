@@ -18,6 +18,7 @@ public class Command {
         this.executable = execute;
         this.CMD_ID = ID;
     }
+
     public boolean execute() {
         return executable.get();
     }

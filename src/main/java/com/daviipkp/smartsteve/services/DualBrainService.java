@@ -14,6 +14,7 @@ import org.springframework.web.client.RestClient;
 
 import java.awt.*;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -33,15 +34,22 @@ public class DualBrainService {
     private final List<Command> commands = new ArrayList<>();
     private final VoiceService voiceService;
     private final EarService earService;
+    private final SearchService searchService;
     @Getter
     @Setter
     private static boolean voiceTyping = false;
     List<String> commandNames;
 
+    private static String command_arg = "";
+    private static String lastPrompt;
+
     @Value("${google.api.key}")
     private String googleApiKey;
 
-    public DualBrainService(ChatRepository arg0, VoiceService voiceService, @Lazy EarService earService) {
+
+
+    public DualBrainService(ChatRepository arg0, VoiceService voiceService, @Lazy EarService earService, SearchService searchService) {
+        this.searchService = searchService;
         this.restClient = RestClient.create();
         this.chatRepo = arg0;
         this.earService = earService;
@@ -62,9 +70,20 @@ public class DualBrainService {
             setVoiceTyping(false);
             return true;
         }, "STOP_VOICE_TYPING"));
+        commands.add(new Command(() -> {
+            System.out.println("Played " + command_arg);
+            return true;
+        }, "PLAY_ON_SPOTIFY"));
+        commands.add(new Command(() -> {
+            earService.stopListening();
+            voiceService.speak(callOllamaLocal(String.format("Those were the results of a search made by the user: %s --- Please answer the results in a polite way. Use user prompt was: %s", searchService.searchAndSummarize(command_arg), lastPrompt), true), earService::resumeListening);
+
+            return true;
+        }, "SEARCH_WEB"));
         commandNames = commands.stream()
                 .map(Command::getCMD_ID)
                 .toList();
+
         this.voiceService = voiceService;
     }
 
@@ -76,12 +95,25 @@ public class DualBrainService {
         });
 
         CompletableFuture<String> futureLocalResponse = CompletableFuture.supplyAsync(() -> {
-            return callOllamaLocal(userPrompt);
+            return callOllamaLocal(userPrompt, false);
         });
 
         CompletableFuture.allOf(futureIntent, futureLocalResponse).join();
 
         String intent = futureIntent.get();
+        List<String> a = Arrays.asList(intent.split("___SEPARATOR___"));
+        List<String> b = new ArrayList<>();
+        for(String s : a) {
+            if(a.indexOf(s) == 0) {
+                continue;
+            }
+            b.add(s);
+
+        }
+
+
+
+        command_arg = String.join("", b);
 
         String localResponse = futureLocalResponse.get();
 
@@ -106,9 +138,11 @@ public class DualBrainService {
             System.out.println(">> Memória salva no banco H2.");
         }
         earService.stopListening();
+        String firstPartOfIntent = a.get(0).trim();
         voiceService.speak(localResponse, () -> {
-            if(commandNames.contains(intent)) {
-                commands.get(commandNames.indexOf(intent)).execute();
+            System.out.println(commandNames);
+            if(commandNames.contains(firstPartOfIntent)) {
+                commands.get(commandNames.indexOf(firstPartOfIntent)).execute();
             }
             earService.resumeListening();
         });
@@ -130,14 +164,14 @@ public class DualBrainService {
                 .collect(Collectors.joining("\n---\n"));
     }
 
-    private String callOllamaLocal(String userPrompt) {
+    private String callOllamaLocal(String userPrompt, boolean raw) {
         try {
 
             long l = System.currentTimeMillis();
             String url = "http://localhost:11434/api/generate";
             var body = Map.of(
                     "model", "qwen3-coder:480b-cloud",
-                    "prompt", String.format(Constants.LOCAL_PROMPT + userPrompt, commandNames),
+                    "prompt", raw? userPrompt:String.format(Constants.LOCAL_PROMPT + userPrompt, commandNames),
                     "stream", false
             );
 
@@ -211,7 +245,7 @@ public class DualBrainService {
                     "model", "qwen3-coder:480b-cloud",
                     "prompt", String.format(Constants.INTENT_PROMPT, commandNames) + " \"" + userPrompt + "\"",
                     "stream", false,
-                    "options", Map.of("brightness", 100.0f)
+                    "options", Map.of()
             );
 
             String jsonResponse = restClient.post()

@@ -14,14 +14,16 @@ public class EarService {
 
     private final KeyboardService kb;
     private final DualBrainService brain;
+    private final VoiceService voiceService;
     private TargetDataLine microphone;
     private boolean isRunning = true;
     private volatile boolean isPaused = false;
 
-    public EarService(KeyboardService kb, DualBrainService brain) {
+    public EarService(KeyboardService kb, DualBrainService brain, VoiceService voiceService) {
         this.kb = kb;
         this.brain = brain;
         new Thread(this::startListening).start();
+        this.voiceService = voiceService;
     }
 
     public void stopListening() {
@@ -92,14 +94,22 @@ public class EarService {
                         if (recognizer.acceptWaveForm(buffer, bytesRead)) {
                             String jsonResult = recognizer.getResult();
                             String text = extractTextFromVosk(jsonResult);
+                            if(text.contains("steve")) {
+                                if(text.contains("shut up")) {
+                                    voiceService.shutUp();
+                                    return;
+                                }
+                                if (!text.trim().isEmpty()) {
+                                    System.out.println("User said: " + text);
 
-                            if (!text.trim().isEmpty()) {
-                                System.out.println("User said: " + text);
+                                    stopListening();
 
-                                stopListening();
+                                    brain.processCommand(text);
+                                }
 
-                                brain.processCommand(text);
                             }
+
+
                         }
                     }
 

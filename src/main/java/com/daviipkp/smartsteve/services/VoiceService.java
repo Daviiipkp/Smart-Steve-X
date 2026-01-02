@@ -29,6 +29,10 @@ public class VoiceService {
         }).start();
     }
 
+    public void shutUp() {
+        Thread.currentThread().interrupt();
+    }
+
     private void generateWavFile(String text) throws IOException, InterruptedException {
         String safeText = text.replace("\n", " ").replace("\"", "");
 
