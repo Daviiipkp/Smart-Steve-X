@@ -3,6 +3,8 @@ package com.daviipkp.smartsteve.services;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.Command;
 import com.daviipkp.smartsteve.Utils;
+import com.daviipkp.smartsteve.Instance.ChatMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,8 +29,10 @@ public class LLMService {
         apiKey = value;
     }
 
-    private static String finalCallModel(String fullPromptText) {
+    @Autowired
+    private CommandRegistry cmdRegistry;
 
+    private ChatMessage finalCallModel(String fullPromptText, String userPrompt) {
         String escapedPrompt = fullPromptText
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -60,92 +66,65 @@ public class LLMService {
             if (response.statusCode() != 200) {
                 System.err.println("error: " + response.statusCode());
                 System.err.println("error bodyy: " + response.body());
-                return "";
+                return null;
             }
-            String s = handleResponse(response.body());
+            ChatMessage s = ChatMessage.fromJson(response.body(), userPrompt);
+            String action = s.getCommand();
+            if (action != null && !action.equals("null") && !action.isEmpty()) {
+
+                for(Command cs : cmdRegistry.getCommands()) {
+                    if(cs.getID().contains((action.contains("___")?action.split("___")[0]:action))) {
+                        try {
+                            String[] sa = new String[2];
+                            sa[0] = action.split("___")[1];
+                            sa[1] = s.getContext();
+                            cs.setArguments(sa).execute();
+                        } catch (NullPointerException e) {
+                            e.printStackTrace();
+                            cmdRegistry.handleNotFound(action);
+                            return null;
+                        }
+                    }
+                }
+
+            }
             return s;
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "";
+        return null;
     }
 
-    public static String callModel(String userPrompt) {
-        String fullPromptText = String.format(Constants.getPrompt(true, false, false), Command.getCommandNames())
+    public ChatMessage callModel(String userPrompt) {
+        String fullPromptText = String.format(Constants.getPrompt(true, false, false), cmdRegistry.getCommandNamesWithDesc())
                 + "\n" + userPrompt;
-        return finalCallModel(fullPromptText);
+        return finalCallModel(fullPromptText, userPrompt);
     }
 
-    public static String callInstructedModel(String userPrompt, String sysInstructions, boolean sendCommands) {
+    public ChatMessage callInstructedModel(String userPrompt, String sysInstructions, boolean sendCommands) {
         String fullPromptText;
         if(sendCommands) {
-            fullPromptText = String.format(Constants.getPrompt(sendCommands, false, true), Command.getCommandNames(), sysInstructions)
+            fullPromptText = String.format(Constants.getPrompt(sendCommands, false, true), cmdRegistry.getCommandNamesWithDesc(), sysInstructions)
                     + "\n" + userPrompt;
         }else{
             fullPromptText = String.format(Constants.getPrompt(sendCommands, false, true), sysInstructions)
                     + "\n" + userPrompt;
         }
-        return finalCallModel(fullPromptText);
+        return finalCallModel(fullPromptText, userPrompt);
     }
 
-    public static String callContextedModel(String userPrompt, String context) {
-        String fullPromptText = String.format(Constants.getPrompt(true, false, false), Command.getCommandNames(), context)
+    public  ChatMessage callContextedModel(String userPrompt, String context) {
+        String fullPromptText = String.format(Constants.getPrompt(true, true, false), cmdRegistry.getCommandNamesWithDesc(), context)
                 + "\n" + userPrompt;
-        return finalCallModel(fullPromptText);
+        return finalCallModel(fullPromptText, userPrompt);
     }
 
-    public static String callModel(String userPrompt, String context, String sysInstructions) {
-        String fullPromptText = String.format(Constants.getPrompt(true, true, true), Command.getCommandNames(), context, sysInstructions)
+    public ChatMessage callModel(String userPrompt, String context, String sysInstructions) {
+        String fullPromptText = String.format(Constants.getPrompt(true, true, true), cmdRegistry.getCommandNamesWithDesc(), context, sysInstructions)
                 + "\n" + userPrompt;
-        return finalCallModel(fullPromptText);
+        return finalCallModel(fullPromptText, userPrompt);
     }
 
-
-    private static String handleResponse(String jsonResponse) {
-        try {
-            Pattern contentPattern = Pattern.compile("\"content\"\\s*:\\s*\"(.*?)(?<!\\\\)\"");
-            Matcher contentMatcher = contentPattern.matcher(jsonResponse);
-
-            if (!contentMatcher.find()) {
-                System.err.println("couldn't find content");
-                return "";
-            }
-
-            String rawInnerJson = contentMatcher.group(1);
-            String innerJson = rawInnerJson
-                    .replace("\\n", "\n")
-                    .replace("\\\"", "\"");
-
-            String status = Utils.extractJsonField(innerJson, "status");
-            String action = Utils.extractJsonField(innerJson, "action");
-            String speech = Utils.extractJsonField(innerJson, "speech");
-
-            if ("IGNORE".equalsIgnoreCase(status)) {
-                System.out.println("[LOG] input ignored.");
-                return "";
-            }
-            System.out.println(action);
-            if (action != null && !action.equals("null") && !action.isEmpty()) {
-                if(Command.getCommandNames().contains(action)) {
-                    try {
-                        Command.getCommand(action).execute();
-                    } catch (NullPointerException e) {
-                        Command.handleNotFound(action);
-                        return "";
-                    }
-                }
-            }
-
-            if (speech != null && !speech.equals("null") && !speech.isEmpty()) {
-                System.out.println("Speech: " +speech);
-                return speech;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
 
 }

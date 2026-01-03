@@ -1,8 +1,8 @@
-package implementations;
+package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.smartsteve.Instance.Command;
 
-public class PlayOnSpotifyCommand extends Command {
+public class KillSwitchCommand extends Command {
     @Override
     public void execute() {
 
@@ -20,11 +20,11 @@ public class PlayOnSpotifyCommand extends Command {
 
     @Override
     public String getID() {
-        return this.getClass().getName();
+        return this.getClass().getSimpleName();
     }
 
     @Override
-    public String getDescription(String description) {
+    public String getDescription() {
         return "";
     }
 }

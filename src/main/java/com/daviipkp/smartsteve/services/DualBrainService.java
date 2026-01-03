@@ -2,21 +2,15 @@ package com.daviipkp.smartsteve.services;
 
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.Command;
-import com.daviipkp.smartsteve.model.ChatMessage;
+import com.daviipkp.smartsteve.Instance.ChatMessage;
 import com.daviipkp.smartsteve.repository.ChatRepository;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.awt.*;
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -34,100 +28,61 @@ public class DualBrainService {
     private final VoiceService voiceService;
     private final EarService earService;
     private final SearchService searchService;
+    private final CommandRegistry cmdRegistry;
+    private final LLMService llmS;
     @Getter
     @Setter
     private static boolean voiceTyping = false;
-
-    private static String command_arg = "";
-    private static String lastPrompt;
 
     @Value("${google.api.key}")
     private String googleApiKey;
 
 
 
-    public DualBrainService(ChatRepository arg0, VoiceService voiceService, @Lazy EarService earService, SearchService searchService) {
+    public DualBrainService(ChatRepository arg0, VoiceService voiceService, @Lazy EarService earService, LLMService llmservice, SearchService searchService,  CommandRegistry commandRegistry) {
         this.searchService = searchService;
         this.restClient = RestClient.create();
         this.chatRepo = arg0;
         this.earService = earService;
-//        commands.add(new Command(() -> {
-//            try {
-//                Desktop.getDesktop().browse(new URI("https://youtube.com"));
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                return false;
-//            }
-//            return true;
-//            }, "OPEN_YOUTUBE_WEBSITE"));
-//        commands.add(new Command(() -> {
-//            setVoiceTyping(true);
-//            return true;
-//        }, "START_VOICE_TYPING"));
-//        commands.add(new Command(() -> {
-//            setVoiceTyping(false);
-//            return true;
-//        }, "STOP_VOICE_TYPING"));
-//        commands.add(new Command(() -> {
-//            System.out.println("Played " + command_arg);
-//            return true;
-//        }, "PLAY_ON_SPOTIFY"));
-//        commands.add(new Command(() -> {
-//            earService.stopListening();
-//            voiceService.speak(callOllamaLocal(String.format("Those were the results of a search made by the user: %s --- Please answer the results in a polite way. Use user prompt was: %s", searchService.searchAndSummarize(command_arg), lastPrompt), true), earService::resumeListening);
-//
-//            return true;
-//        }, "SEARCH_WEB"));
-
         this.voiceService = voiceService;
+        this.cmdRegistry = commandRegistry;
+        this.llmS = llmservice;
     }
 
     public String processCommand(String userPrompt) throws ExecutionException, InterruptedException {
         String context = getContext();
 
-
-        CompletableFuture<String> fResponse = CompletableFuture.supplyAsync(() -> {
-            return LLMService.callModel(userPrompt);
+        CompletableFuture<ChatMessage> fResponse = CompletableFuture.supplyAsync(() -> {
+            return llmS.callContextedModel(userPrompt, context);
         });
 
         CompletableFuture.allOf(fResponse).join();
-        String response = fResponse.get();
-        List<String> a = Arrays.asList(response.split("___SEPARATOR___"));
-        List<String> b = new ArrayList<>();
-        for(String s : a) {
-            if(a.indexOf(s) == 0) {
-                continue;
-            }
-            b.add(s);
-
-        }
 
 
-
-        command_arg = String.join("", b);
+        ChatMessage cResponse = fResponse.get();
+        String response = cResponse.getSteveResponse();
+        String cmd = cResponse.getCommand();
 
 
         if(Constants.DEBUG) {
             System.out.println("============== NOVA REQUISIÇÃO ==============");
             System.out.println("user: " + userPrompt);
             System.out.println(">> Response: " + response);
-
-        }
-        if(Constants.DEBUG) {
-            System.out.println(">> Commando requisitado! " + command_arg );
+            System.out.println(">> Command: " + cmd);
+            System.out.println(">> Context: " + cResponse.getContext());
         }
 
-        ChatMessage chatMessage = new ChatMessage(userPrompt, response);
-        //chatRepo.save(chatMessage);
+
+        ChatMessage chatMessage = new ChatMessage(userPrompt, response, context, cmd);
+        chatRepo.save(chatMessage);
         if(Constants.DEBUG) {
             System.out.println(">> Memória salva no banco H2.");
         }
         earService.stopListening();
-        String firstPartOfIntent = a.get(0).trim();
-        voiceService.speak(response, () -> {
+        VoiceService.speak(response, () -> {
             earService.resumeListening();
-            if(Command.getCommandNames().contains(firstPartOfIntent)) {
-                Command.getCommands().get(Command.getCommandNames().indexOf(firstPartOfIntent)).execute();
+            if(cmdRegistry.getCommandNames().contains(cmd)) {
+                cmdRegistry.getCommands().get(cmdRegistry.getCommandNames().indexOf(cmd)).execute();
             }
         });
 
@@ -144,7 +99,11 @@ public class DualBrainService {
         }
 
         return messages.stream()
-                .map(m -> "User: " + m.getUserPrompt() + "\nSteve: " + m.getSteveResponse())
+                .map(m -> "User: " + m.getUserPrompt()
+                        + "\nSteve: " + m.getSteveResponse()
+                        + "\nContext: " + m.getContext()
+                        + "\nTimestamp: " + m.getTimestamp() +
+                        (m.getCommand().equals("null")?"":"\nCommand: "+m.getCommand()))
                 .collect(Collectors.joining("\n---\n"));
     }
 

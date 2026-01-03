@@ -1,6 +1,6 @@
 package com.daviipkp.smartsteve.repository;
 
-import com.daviipkp.smartsteve.model.ChatMessage;
+import com.daviipkp.smartsteve.Instance.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
