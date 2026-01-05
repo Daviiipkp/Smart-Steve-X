@@ -46,11 +46,14 @@ public class Constants {
                 Input: "Turn on the kitchen lights"
                 Output: { "status": "SUCCESS", "action": "CMD_LIGHTS_ON", "speech": "Yes, sir.", "memory": "User requested kitchen lights on. Executed CMD_LIGHTS_ON." }
                 
+                Input: "Turn on the kitchen lights and then play StressedOut on Spotify"
+                Output: { "status": "SUCCESS", "action": "CMD_LIGHTS_ON&&PlayOnSpotifyCommand___Stressed Out", "speech": "Yes, sir.", "memory": "User requested kitchen lights on. Executed CMD_LIGHTS_ON." }
+                
                 Input: "Make me a sandwich"
                 Output: { "status": "SUCCESS", "action": null, "speech": "That's not on my command list, Sir.", "memory": "User asked for a sandwich. Refused due to lack of capabilities." }
                 
                 Input: "Search for some cool games"
-                Output: { "status": "DOING", "action": "SEARCH_WEB cool games", "speech": "Searching, sir.", "memory": "User asked for cool games. Triggered WEB_SEARCH." }
+                Output: { "status": "DOING", "action": "WEB_SEARCH cool games", "speech": "Searching, sir.", "memory": "User asked for cool games. Triggered WEB_SEARCH." }
                 
                 Input: "meh"
                 Output: { "status": "IGNORE", "action": null, "speech": null, "memory": null }

@@ -1,6 +1,6 @@
 package com.daviipkp.smartsteve.services;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import lombok.Getter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
@@ -12,20 +12,20 @@ import java.util.*;
 public class CommandRegistry {
 
     @Getter
-    private List<Command> commands;
+    private List<CommandE> commands;
 
     @Getter
     private List<String> commandNames;
 
     private final LLMService llmS;
 
-    public CommandRegistry(ApplicationContext context, List<Command> allCommands, @Lazy LLMService llmService) {
+    public CommandRegistry(ApplicationContext context, List<CommandE> allCommands, @Lazy LLMService llmService) {
         this.llmS = llmService;
         this.commands = allCommands;
     }
 
-    public Command getCommand(String id) {
-        for(Command c : getCommands()) {
+    public CommandE getCommand(String id) {
+        for(CommandE c : getCommands()) {
             if(c.getID().equals(id)) {
                 return c;
             }
@@ -36,7 +36,7 @@ public class CommandRegistry {
     public List<String> getCommandNames() {
         if(commandNames == null) {
             commandNames = new ArrayList<>();
-            for(Command c : getCommands()) {
+            for(CommandE c : getCommands()) {
                 commandNames.add(c.getID() );
             }
         }
@@ -46,7 +46,7 @@ public class CommandRegistry {
     public List<String> getCommandNamesWithDesc() {
         if(commandNames == null) {
             commandNames = new ArrayList<>();
-            for(Command c : getCommands()) {
+            for(CommandE c : getCommands()) {
                 commandNames.add(c.getID() + "-" + c.getDescription());
             }
         }

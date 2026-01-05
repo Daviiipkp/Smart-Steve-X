@@ -1,8 +1,7 @@
 package com.daviipkp.smartsteve.services;
 
 import com.daviipkp.smartsteve.Constants;
-import com.daviipkp.smartsteve.Instance.Command;
-import com.daviipkp.smartsteve.Utils;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,10 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 @Service
 public class LLMService {
@@ -54,6 +50,9 @@ public class LLMService {
         """.formatted(defaultModel, escapedPrompt);
 
         try {
+            long time = System.currentTimeMillis();
+            System.out.println("Prompt: ");
+            System.out.println(jsonBody);
             HttpClient client = HttpClient.newHttpClient();
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -64,6 +63,7 @@ public class LLMService {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("Request time: " + (System.currentTimeMillis() - time));
 
             if (response.statusCode() != 200) {
                 System.err.println("error: " + response.statusCode());
@@ -72,24 +72,40 @@ public class LLMService {
             }
             ChatMessage s = ChatMessage.fromJson(response.body(), userPrompt);
             String action = s.getCommand();
+            List<CommandE> toExec = new ArrayList<>();
             if (action != null && !action.equals("null") && !action.isEmpty()) {
-
-                for(Command cs : cmdRegistry.getCommands()) {
-                    if(cs.getID().contains((action.contains("___")?action.split("___")[0]:action))) {
-                        try {
-                            String[] sa = new String[2];
-                            sa[0] = action.split("___")[1];
-                            sa[1] = s.getContext();
-                            cs.setArguments(sa).execute();
-                        } catch (NullPointerException e) {
-                            e.printStackTrace();
-                            cmdRegistry.handleNotFound(action);
-                            return null;
+                String[] cmdsWithArg = action.contains("&&")?action.split("&&"): List.of(action).toArray(new String[1]);
+                for(CommandE cs : cmdRegistry.getCommands()) {
+                    for(String cmd : cmdsWithArg) {
+                        if(cs.getID().contains((cmd.contains("___")?cmd.split("___")[0]:cmd))) {
+                            try {
+                                if(cmd.contains("___")) {
+                                    String[] args = cmd.split("___");
+                                    String[] result = Arrays.copyOfRange(args, 1, args.length);
+                                    toExec.add(cs.setArguments(result).setContext(s.getContext()));
+                                }else{
+                                    toExec.add(cs.setContext(s.getContext()));
+                                }
+                            } catch (NullPointerException e) {
+                                e.printStackTrace();
+                                cmdRegistry.handleNotFound(action);
+                                return null;
+                            }
                         }
                     }
                 }
 
             }
+            new Thread(() -> {
+                while(true) {
+                    if(!toExec.isEmpty()) {
+                        toExec.get(0).execute();
+                        toExec.remove(0);
+                    }else{
+                        break;
+                    }
+                }
+            }).start();
             return s;
 
         } catch (Exception e) {

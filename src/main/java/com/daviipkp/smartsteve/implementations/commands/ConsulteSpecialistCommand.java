@@ -1,11 +1,11 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import com.daviipkp.smartsteve.services.CommandRegistry;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ConsulteSpecialistCommand extends Command {
+public class ConsulteSpecialistCommand extends CommandE {
     @Override
     public void execute() {
 
@@ -23,7 +23,7 @@ public class ConsulteSpecialistCommand extends Command {
 
     @Override
     public String getID() {
-        return "";
+        return this.getClass().getSimpleName();
     }
 
     @Override

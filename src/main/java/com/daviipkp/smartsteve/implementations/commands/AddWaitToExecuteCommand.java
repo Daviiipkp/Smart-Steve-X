@@ -1,14 +1,17 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.smartsteve.Instance.CommandE;
-import com.daviipkp.smartsteve.services.CommandRegistry;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PlayOnSpotifyCommand extends CommandE {
+public class AddWaitToExecuteCommand extends CommandE {
     @Override
     public void execute() {
-
+        try {
+            Thread.sleep(Long.parseLong(getArguments()[0])*1000);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -28,6 +31,6 @@ public class PlayOnSpotifyCommand extends CommandE {
 
     @Override
     public String getDescription() {
-        return "Use to play a specific song or song style on Spotify. Example usage: " + CommandRegistry.getExampleUsage(getID(), "Stressed Out - Twenty One Pilots");
+        return "Makes the computer wait to execute the next queued command. Can be used with other commands only. Example usage: " + this.getID() + "___10&&SystemShutdownCommand";
     }
 }

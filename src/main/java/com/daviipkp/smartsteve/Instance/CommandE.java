@@ -2,26 +2,24 @@ package com.daviipkp.smartsteve.Instance;
 
 import com.daviipkp.smartsteve.services.LLMService;
 import com.daviipkp.smartsteve.services.VoiceService;
-import com.daviipkp.smartsteve.implementations.commands.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 @Component
-public abstract class Command {
+public abstract class CommandE {
 
     @Lazy
     @Autowired
     protected LLMService llmService;
 
     @Getter
-    private String[] arguments;
+    private String[] arguments = new String[0];
 
     @Getter
     @Setter
@@ -35,7 +33,10 @@ public abstract class Command {
     @Setter
     private Supplier<Void> supCallback;
 
-    private static List<Command> commands;
+    @Getter
+    private String context;
+
+    private static List<CommandE> commands;
     private static List<String> commandNames;
 
     public abstract void execute();
@@ -52,8 +53,18 @@ public abstract class Command {
 
     public abstract String getDescription();
 
-    public Command setArguments(String[] arg0) {
+    public CommandE setArguments(String[] arg0) {
         this.arguments = arg0;
+        return this;
+    }
+
+    public CommandE setArguments(List<String> arg0) {
+        this.arguments = arg0.toArray(new String[arg0.size()]);
+        return this;
+    }
+
+    public CommandE setContext(String arg0) {
+        this.context = arg0;
         return this;
     }
 

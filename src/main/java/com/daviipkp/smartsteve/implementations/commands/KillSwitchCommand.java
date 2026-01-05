@@ -1,32 +1,17 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.SteveCommandLib.instance.InstantCommand;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import org.springframework.stereotype.Component;
 
-@Component
-public class KillSwitchCommand extends Command {
-    @Override
-    public void execute() {
+public class KillSwitchCommand extends InstantCommand {
 
-    }
+    public KillSwitchCommand() {
+        super(new Runnable() {
+            @Override
+            public void run() {
 
-    @Override
-    public void callback() {
-
-    }
-
-    @Override
-    public void executeSupCallback() {
-
-    }
-
-    @Override
-    public String getID() {
-        return this.getClass().getSimpleName();
-    }
-
-    @Override
-    public String getDescription() {
-        return "Use to kill the system completely without confirmation.";
+            }
+        });
     }
 }

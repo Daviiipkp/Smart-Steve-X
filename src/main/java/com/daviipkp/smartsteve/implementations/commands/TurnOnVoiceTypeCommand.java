@@ -1,32 +1,18 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.SteveCommandLib.instance.InstantCommand;
+import com.daviipkp.smartsteve.Instance.CommandE;
+import com.daviipkp.smartsteve.services.EarService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TurnOnVoiceTypeCommand extends Command {
-    @Override
-    public void execute() {
-
-    }
-
-    @Override
-    public void callback() {
-
-    }
-
-    @Override
-    public void executeSupCallback() {
-
-    }
-
-    @Override
-    public String getID() {
-        return "";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Turns on Voice Typing.";
+public class TurnOnVoiceTypeCommand extends InstantCommand {
+    public TurnOnVoiceTypeCommand(EarService eService) {
+        super(new Runnable() {
+            @Override
+            public void run() {
+                eService.startVoiceTyping();
+            }
+        });
     }
 }

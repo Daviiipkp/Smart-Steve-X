@@ -1,7 +1,6 @@
 package com.daviipkp.smartsteve.services;
 
 import com.daviipkp.smartsteve.Constants;
-import com.daviipkp.smartsteve.Instance.Command;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import com.daviipkp.smartsteve.repository.ChatRepository;
 import lombok.Getter;
@@ -92,7 +91,7 @@ public class DualBrainService {
     }
 
     private String getContext() {
-        List<ChatMessage> messages = chatRepo.findTop10ByOrderByTimestampDesc();
+        List<ChatMessage> messages = chatRepo.findTop3ByOrderByTimestampDesc();
 
         Collections.reverse(messages);
 

@@ -1,12 +1,12 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import com.daviipkp.smartsteve.services.CommandRegistry;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SearchWebCommand extends Command {
+public class SearchWebCommand extends  {
 
     @Getter
     private static final SearchWebCommand instance = new SearchWebCommand();

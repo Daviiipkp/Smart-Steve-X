@@ -1,5 +1,6 @@
 package com.daviipkp.smartsteve.services;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vosk.Model;
 import org.vosk.Recognizer;
@@ -19,6 +20,8 @@ public class EarService {
     private TargetDataLine microphone;
     private boolean isRunning = true;
     private volatile boolean isPaused = false;
+    @Getter
+    private boolean voiceTyping;
 
     public EarService(KeyboardService kb, DualBrainService brain, VoiceService voiceService) {
         this.kb = kb;
@@ -76,7 +79,7 @@ public class EarService {
 
 
                 if(bytesRead > 0) {
-                    if(DualBrainService.isVoiceTyping()) {
+                    if(isVoiceTyping()) {
                         if(!recognizer.acceptWaveForm(buffer, bytesRead)) {
 
                         }
@@ -131,5 +134,10 @@ public class EarService {
             return json.substring(start, end);
         }
         return "";
+    }
+    public void startVoiceTyping() {
+        voiceTyping = true;
+    }public void stopVoiceTyping() {
+        voiceTyping = false;
     }
 }

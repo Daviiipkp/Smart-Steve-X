@@ -1,47 +1,31 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.SteveCommandLib.instance.InstantCommand;
+import com.daviipkp.SteveJsoning.annotations.CommandDescription;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import com.daviipkp.smartsteve.services.CommandRegistry;
+import com.daviipkp.smartsteve.services.EarService;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
-@Component
-public class SystemShutdownCommand extends Command  {
+@CommandDescription(value = "Command designed to shutdown the computer/system.", possibleArguments = "Time in seconds for it to shutdown. No argument means instantly.")
+public class SystemShutdownCommand extends InstantCommand {
 
-    @Override
-    public void execute() {
-
-        try {
-            ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", getArguments()[0]);
-
-            pb.start();
-
-        } catch (IOException e) {
-            handleError(e);
-        }
+    public SystemShutdownCommand(String... args) {
+        super(new Runnable() {
+            public void run() {
+                ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", (args.length == 0) ? "0" : args[0]);
+                try {
+                    pb.start();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     @Override
-    public void callback() {
-
-    }
-
-    @Override
-    public void executeSupCallback() {
-
-    }
-
-
-    @Override
-    public String getID() {
-        return this.getClass().getSimpleName();
-    }
-
-    @Override
-    public String getDescription() {
-        return "Shuts down the system. Argument of time can be used (in seconds). Example: " + CommandRegistry.getExampleUsage(getID(), "120");
+    public void handleError(Exception e) {
     }
 }

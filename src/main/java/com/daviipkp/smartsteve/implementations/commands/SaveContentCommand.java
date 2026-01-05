@@ -1,14 +1,13 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
-import com.daviipkp.smartsteve.Instance.Content;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import com.daviipkp.smartsteve.repository.ContentRepository;
 import com.daviipkp.smartsteve.services.CommandRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SaveContentCommand extends Command {
+public class SaveContentCommand extends CommandE {
 
     @Autowired
     ContentRepository contentRepository;
@@ -30,7 +29,7 @@ public class SaveContentCommand extends Command {
 
     @Override
     public String getID() {
-        return "";
+        return this.getClass().getSimpleName();
     }
 
     @Override

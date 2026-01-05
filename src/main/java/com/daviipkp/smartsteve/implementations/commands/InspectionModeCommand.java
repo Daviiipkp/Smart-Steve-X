@@ -1,10 +1,10 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.smartsteve.Instance.Command;
+import com.daviipkp.smartsteve.Instance.CommandE;
 import org.springframework.stereotype.Component;
 
 @Component
-public class InspectionModeCommand extends Command {
+public class InspectionModeCommand extends CommandE {
     @Override
     public void execute() {
 
@@ -22,7 +22,7 @@ public class InspectionModeCommand extends Command {
 
     @Override
     public String getID() {
-        return "";
+        return this.getClass().getSimpleName();
     }
 
     @Override
