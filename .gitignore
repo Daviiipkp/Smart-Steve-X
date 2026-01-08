@@ -34,3 +34,4 @@ build/
 /piper
 /model_en
 data/database.mv.db
+ss_executor.bat

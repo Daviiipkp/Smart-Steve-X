@@ -108,7 +108,6 @@ public class EarService {
                                     VoiceService.shutUp();
                                     return;
                                 }
-                                System.out.println(SteveJsoning.stringify(new ChatMessage("a","b","c","d")));
                                 if (!text.trim().isEmpty()) {
                                     System.out.println("User said: " + text);
 

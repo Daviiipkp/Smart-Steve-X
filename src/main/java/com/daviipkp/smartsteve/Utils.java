@@ -28,4 +28,14 @@ public class Utils {
         return classes;
     }
 
+    public static Command getCommandByName(String s) throws InstantiationException, IllegalAccessException {
+        Set<Class<?>> classes = ref.getTypesAnnotatedWith(CommandDescription.class);
+        for(Class<?> c : classes) {
+            if(c.getSimpleName().equals(s)) {
+                return (Command) c.newInstance();
+            }
+        }
+        return null;
+    }
+
 }

@@ -10,10 +10,10 @@ import java.io.IOException;
         exampleUsage = "time: 300")
 public class SystemShutdownCommand extends InstantCommand {
 
-    public SystemShutdownCommand(String... args) {
+    public SystemShutdownCommand () {
         setCommand(new Runnable() {
             public void run() {
-                ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", (args.length == 0) ? "0" : args[0]);
+                ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", getArgument("time"));
                 try {
                     pb.start();
                 } catch (IOException e) {

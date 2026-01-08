@@ -9,6 +9,7 @@ import com.daviipkp.smartsteve.Instance.SteveResponse;
 import com.daviipkp.smartsteve.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -22,13 +23,24 @@ import java.util.*;
 public class LLMService {
 
     private static final String defaultProvider = "https://ai.hackclub.com/proxy/v1/chat/completions";
-    private static final String defaultModel = "qwen/qwen3-32b";
+    private static final String defaultModel = "google/gemini-3-flash-preview";
     private static final String defaultEmbeddingModel = "openai/text-embedding-3-small";
     static String apiKey;
+
+    private long lastTick = 0;
 
     @Value("${hcai.api.key}")
     public void setApiKey(String value) {
         apiKey = value;
+    }
+
+    @Scheduled(fixedRate = 50)
+    private void tick() {
+        if(lastTick == 0) {
+            lastTick = System.currentTimeMillis();
+        }
+        SteveCommandLib.tick(System.currentTimeMillis() - lastTick);
+        lastTick = System.currentTimeMillis();
     }
 
     private ChatMessage finalCallModel(String fullPromptText, String userPrompt) {
@@ -52,7 +64,7 @@ public class LLMService {
 
         try {
             long time = System.currentTimeMillis();
-            SteveCommandLib.systemPrint("Prompt sent: " + fullPromptText);
+            //SteveCommandLib.systemPrint("Prompt sent: " + fullPromptText);
             HttpClient client = HttpClient.newHttpClient();
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -71,11 +83,24 @@ public class LLMService {
                 return null;
             }
 
-            SteveResponse s = SteveJsoning.parse(SteveJsoning.valueAtPath("/choices/0/message",response.body()), SteveResponse.class);
+
+            SteveResponse s = SteveJsoning.parse(SteveJsoning.valueAtPath("/choices/0/message/content", response.body()), SteveResponse.class);
+
+            Set<Class<?>> registeredCmds = Utils.getRegisteredCommands();
+            for(String cmd : s.action.keySet()) {
+                try {
+                    Command command = Utils.getCommandByName(cmd);
+                    for(String argName : s.action.get(cmd).keySet()) {
+                        command.setArgument(argName,  s.action.get(cmd).get(argName));
+                    }
+                    SteveCommandLib.addCommand(command);
+                } catch (Exception e) {
+                    System.out.println("Could find command or it needs a constructor parameter.");
+                }
+            }
 
 
-            System.out.println(s.action.toString());
-            return new ChatMessage("", "", "", "");
+            return new ChatMessage(userPrompt, SteveJsoning.valueAtPath("/choices/0/message/content", response.body()), "", "");
 
         } catch (Exception e) {
             e.printStackTrace();
