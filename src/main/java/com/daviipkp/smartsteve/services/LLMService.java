@@ -7,6 +7,9 @@ import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import com.daviipkp.smartsteve.Instance.SteveResponse;
 import com.daviipkp.smartsteve.Utils;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,7 +27,6 @@ public class LLMService {
 
     private static final String defaultProvider = "https://ai.hackclub.com/proxy/v1/chat/completions";
     private static final String defaultModel = "google/gemini-3-flash-preview";
-    private static final String defaultEmbeddingModel = "openai/text-embedding-3-small";
     static String apiKey;
 
     private long lastTick = 0;
@@ -64,7 +66,9 @@ public class LLMService {
 
         try {
             long time = System.currentTimeMillis();
-            //SteveCommandLib.systemPrint("Prompt sent: " + fullPromptText);
+            if(Constants.FINAL_PROMPT_DEBUG) {
+                SteveCommandLib.systemPrint("Prompt sent: " + fullPromptText);
+            }
             HttpClient client = HttpClient.newHttpClient();
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -100,7 +104,7 @@ public class LLMService {
             }
 
 
-            return new ChatMessage(userPrompt, SteveJsoning.valueAtPath("/choices/0/message/content", response.body()), "", "");
+            return new ChatMessage(userPrompt, SteveJsoning.valueAtPath("/choices/0/message/content", response.body()));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -127,7 +131,7 @@ public class LLMService {
     }
 
     public  ChatMessage callDefContextedModel(String userPrompt, String context) {
-        String fullPromptText = String.format(Constants.getDefaultPrompt(true, true, false), Utils.getCommandNamesWithDesc(), context)
+        String fullPromptText = String.format(Constants.getDefaultPrompt(true, true, false, true), Utils.getCommandNamesWithDesc(), getMemoryConsult(userPrompt), context)
                 + "\n" + userPrompt;
         return finalCallModel(fullPromptText, userPrompt);
     }
@@ -138,54 +142,32 @@ public class LLMService {
         return finalCallModel(fullPromptText, userPrompt);
     }
 
-    public float[] callEmbeddingModel(String textToEmbed) {
-        String escapedText = textToEmbed
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", " ");
+    public String getMemoryConsult(String query) {
+        VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
 
-        String jsonBody = """
-            {
-                "model": "%s",
-                "input": "%s"
-            }
-            """.formatted(defaultEmbeddingModel, escapedText);
+        SearchRequest request = SearchRequest.query(query)
+                .withTopK(5)
+                .withSimilarityThreshold(0.5);
 
-        try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(defaultEmbeddingModel))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
-                    .build();
+        List<Document> r = vectorStore.similaritySearch(request);
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() != 200) {
-                System.err.println("Embedding Error: " + response.body());
-                return null;
-            }
-
-            String body = response.body();
-            int start = body.indexOf("\"embedding\":") + 12;
-            int end = body.indexOf("]", start) + 1;
-
-            String vectorString = body.substring(start, end).replace("[", "").replace("]", "").trim();
-
-            String[] parts = vectorString.split(",");
-            float[] vector = new float[parts.length];
-            for (int i = 0; i < parts.length; i++) {
-                vector[i] = Float.parseFloat(parts[i].trim());
-            }
-
-            return vector;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        StringBuilder sb = new StringBuilder();
+        if(Constants.MEMORY_DEBUG) {
+            SteveCommandLib.systemPrint("Trying to get Memory Consult");
         }
-    }
 
+        for (Document doc : r) {
+            String c = doc.getContent();
+            Map<String, Object> m = doc.getMetadata();
+            sb.append("- ").append(c).append("\n");
+            if(Constants.MEMORY_DEBUG) {
+                SteveCommandLib.systemPrint("Memory added: " + c);
+            }
+        }
+
+
+        return sb.toString();
+
+    }
 
 }

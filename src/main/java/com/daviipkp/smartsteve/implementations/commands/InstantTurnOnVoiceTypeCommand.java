@@ -5,8 +5,8 @@ import com.daviipkp.smartsteve.services.EarService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TurnOnVoiceTypeCommand extends InstantCommand {
-    public TurnOnVoiceTypeCommand(EarService eService) {
+public class InstantTurnOnVoiceTypeCommand extends InstantCommand {
+    public InstantTurnOnVoiceTypeCommand(EarService eService) {
         setCommand(new Runnable() {
             @Override
             public void run() {

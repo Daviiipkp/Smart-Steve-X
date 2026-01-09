@@ -5,9 +5,9 @@ import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 
 @CommandDescription(value = "Used to kill instantly the system without arguments.",
         possibleArguments = "")
-public class KillSwitchCommand extends InstantCommand {
+public class InstantKillSwitchCommand extends InstantCommand {
 
-    public KillSwitchCommand() {
+    public InstantKillSwitchCommand() {
         setCommand(new Runnable() {
             @Override
             public void run() {

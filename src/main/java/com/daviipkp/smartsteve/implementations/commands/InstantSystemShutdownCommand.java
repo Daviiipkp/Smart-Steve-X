@@ -8,9 +8,9 @@ import java.io.IOException;
 @CommandDescription(value = "Command designed to shutdown the computer/system. Argument is time in seconds for it to shutdown. No argument means instantly.",
         possibleArguments = "time: <number in seconds>",
         exampleUsage = "time: 300")
-public class SystemShutdownCommand extends InstantCommand {
+public class InstantSystemShutdownCommand extends InstantCommand {
 
-    public SystemShutdownCommand () {
+    public InstantSystemShutdownCommand() {
         setCommand(new Runnable() {
             public void run() {
                 ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", getArgument("time"));

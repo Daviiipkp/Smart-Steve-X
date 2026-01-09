@@ -20,33 +20,18 @@ public class ChatMessage {
 
     private LocalDateTime timestamp;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String userPrompt;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String steveResponse;
 
-    @Lob
-    private String context;
-
-    @Lob
-    private String command;
-
-    public ChatMessage(String userPrompt, String steveResponse, String context) {
+    public ChatMessage(String userPrompt, String steveResponse) {
         this.userPrompt = userPrompt;
         this.steveResponse = steveResponse;
-        this.context = context;
-        this.command = "null";
         this.timestamp = LocalDateTime.now();
     }
 
-    public ChatMessage(String userPrompt, String steveResponse, String context, String command) {
-        this.userPrompt = userPrompt;
-        this.steveResponse = steveResponse;
-        this.context = context;
-        this.command = command;
-        this.timestamp = LocalDateTime.now();
-    }
 
 
 

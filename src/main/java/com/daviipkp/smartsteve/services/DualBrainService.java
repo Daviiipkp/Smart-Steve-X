@@ -1,9 +1,11 @@
 package com.daviipkp.smartsteve.services;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
+import com.daviipkp.SteveJsoning.SteveJsoning;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import com.daviipkp.smartsteve.repository.ChatRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,17 +60,10 @@ public class DualBrainService {
 
         ChatMessage cResponse = fResponse.get();
 
-
-        SteveCommandLib.systemPrint("============== NOVA REQUISIÇÃO ==============");
-        SteveCommandLib.systemPrint("user: " + userPrompt);
-        SteveCommandLib.systemPrint(">> Response: " + cResponse.getSteveResponse());
-        SteveCommandLib.systemPrint(">> Command: " + cResponse.getCommand());
-        SteveCommandLib.systemPrint(">> Context: " + cResponse.getContext());
-
         chatRepo.save(cResponse);
-        SteveCommandLib.systemPrint(">> Memória salva no banco H2: " + cResponse);
-
-        earService.stopListening();
+        if(Constants.DATABASE_SAVING_DEBUG) {
+            SteveCommandLib.systemPrint(">> Memória salva no banco H2: " + cResponse);
+        }
 
         return cResponse.getSteveResponse();
     }
@@ -83,11 +78,15 @@ public class DualBrainService {
         }
 
         return messages.stream()
-                .map(m -> "User: " + m.getUserPrompt()
-                        + "\nSteve: " + m.getSteveResponse()
-                        + "\nContext: " + m.getContext()
-                        + "\nTimestamp: " + m.getTimestamp() +
-                        (m.getCommand().equals("null")?"":"\nCommand: "+m.getCommand()))
+                .map(m -> {
+                    try {
+                        return "User: " + m.getUserPrompt()
+                                + "\nSteve memory: " + SteveJsoning.valueAtPath("/memory", m.getSteveResponse())
+                                + "\nTimestamp: " + m.getTimestamp();
+                    } catch (JsonProcessingException e) {
+                        return "";
+                    }
+                })
                 .collect(Collectors.joining("\n---\n"));
     }
 

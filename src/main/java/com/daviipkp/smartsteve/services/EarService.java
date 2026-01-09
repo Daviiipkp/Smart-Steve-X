@@ -4,6 +4,8 @@ import com.daviipkp.SteveJsoning.SteveJsoning;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.springframework.stereotype.Service;
@@ -28,8 +30,12 @@ public class EarService {
     public EarService(KeyboardService kb, DualBrainService brain, VoiceService voiceService) {
         this.kb = kb;
         this.brain = brain;
-        new Thread(this::startListening).start();
         this.voiceService = voiceService;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
+        new Thread(this::startListening).start();
     }
 
     public void stopListening() {
@@ -78,15 +84,9 @@ public class EarService {
 
                 bytesRead = microphone.read(buffer, 0, buffer.length);
 
-
-
                 if(bytesRead > 0) {
                     if(isVoiceTyping()) {
-                        if(!recognizer.acceptWaveForm(buffer, bytesRead)) {
-
-                        }
-                        else {
-
+                        if(recognizer.acceptWaveForm(buffer, bytesRead)) {
                             String jsonResult = recognizer.getResult();
                             String text = extractTextFromVosk(jsonResult);
                             if(text.contains("stop")) {
@@ -98,27 +98,27 @@ public class EarService {
                         }
                     }else{
                         if(VoiceService.getCurrentThread() != null && VoiceService.getCurrentThread().isAlive()) {
+                            if(recognizer.acceptWaveForm(buffer, bytesRead)) {
+                                String jsonResult = recognizer.getResult();
+                                String text = extractTextFromVosk(jsonResult);
+                                if(text.contains("steve")) {
+                                    if(text.contains("shut up")) {
+                                        VoiceService.shutUp();
+                                    }
+                                }
+                            }
                             return;
                         }
                         if (recognizer.acceptWaveForm(buffer, bytesRead)) {
                             String jsonResult = recognizer.getResult();
                             String text = extractTextFromVosk(jsonResult);
-                            if(text.contains("steve")) {
-                                if(text.contains("shut up")) {
-                                    VoiceService.shutUp();
-                                    return;
-                                }
-                                if (!text.trim().isEmpty()) {
+                            if (text.contains("over")) {
+                                if(text.contains("steve")) {
                                     System.out.println("User said: " + text);
-
-                                    stopListening();
 
                                     brain.processCommand(text);
                                 }
-
                             }
-
-
                         }
                     }
 

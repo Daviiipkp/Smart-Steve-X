@@ -21,11 +21,13 @@ public class VoiceService {
         speakThread = new Thread(() -> {
             try {
                 generateWavFile(text);
+                EarService s = SpringContext.getBean(EarService.class);
+                s.stopListening();
 
                 playWavFile();
 
                 if (onComplete != null) onComplete.run();
-
+                s.resumeListening();
                 shutUp();
             } catch (Exception e) {
                 e.printStackTrace();

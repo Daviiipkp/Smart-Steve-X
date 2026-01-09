@@ -5,8 +5,8 @@ import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 
 @CommandDescription(value = "Activates Inspection Mode.", possibleArguments = "")
-public class TurnOnInspectionModeCommand extends InstantCommand {
-    public TurnOnInspectionModeCommand() {
+public class InstantTurnOnInspectionModeCommand extends InstantCommand {
+    public InstantTurnOnInspectionModeCommand() {
         setCommand(new Runnable() {
             @Override
             public void run() {

@@ -3,9 +3,9 @@ package com.daviipkp.smartsteve.implementations.commands;
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.smartsteve.services.EarService;
 
-public class TurnOffVoiceTypeCommand extends InstantCommand {
+public class InstantTurnOffVoiceTypeCommand extends InstantCommand {
 
-    public TurnOffVoiceTypeCommand(EarService eService) {
+    public InstantTurnOffVoiceTypeCommand(EarService eService) {
         setCommand(new Runnable() {
             @Override
             public void run() {

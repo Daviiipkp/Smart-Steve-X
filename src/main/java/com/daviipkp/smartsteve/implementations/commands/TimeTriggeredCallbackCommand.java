@@ -2,22 +2,18 @@ package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.SteveCommandLib.instance.TriggeredCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
-import com.daviipkp.smartsteve.repository.TriggersRepository;
 
 import java.time.LocalDateTime;
 
-@CommandDescription(value = "Used to have a callback when a certain time comes. Useful if the user asks to be warned in specific times.",
+@CommandDescription(value = "Used to have a callback when a certain time comes. Useful if the user asks a Instant Command to happen in a specific time.",
         possibleArguments = "time: <Formatted Date/Time>",
         exampleUsage = "time: 1/1/2026 3:00PM")
 public class TimeTriggeredCallbackCommand extends TriggeredCommand {
 
-    private final TriggersRepository triggersRepository;
-
     private final LocalDateTime triggerTime;
 
-    public TimeTriggeredCallbackCommand(TriggersRepository triggersRepository, LocalDateTime time) {
-        this.triggersRepository = triggersRepository;
-        triggerTime = time;
+    public TimeTriggeredCallbackCommand() {
+        triggerTime = LocalDateTime.parse(getArgument("time"));
     }
 
     @Override
