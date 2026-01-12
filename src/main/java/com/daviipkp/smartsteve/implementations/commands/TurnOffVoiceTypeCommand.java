@@ -1,16 +1,17 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
-import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
+import com.daviipkp.smartsteve.services.EarService;
 
-@CommandDescription(value = "Activates Inspection Mode.", possibleArguments = "")
-public class InstantTurnOnInspectionModeCommand extends InstantCommand {
-    public InstantTurnOnInspectionModeCommand() {
+@CommandDescription(value = "Turns off voice typing.")
+public class TurnOffVoiceTypeCommand extends InstantCommand {
+
+    public TurnOffVoiceTypeCommand(EarService eService) {
         setCommand(new Runnable() {
             @Override
             public void run() {
-                SteveCommandLib.debug(true);
+                eService.stopVoiceTyping();
             }
         });
     }

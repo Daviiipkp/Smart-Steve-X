@@ -1,12 +1,14 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
+import com.daviipkp.SteveJsoning.annotations.Describe;
 
-@CommandDescription(value = "Command used to search anything in the web. User inputs, recent happenings. Anything that might be in the internet.",
-        possibleArguments = "search: <String>",
-        exampleUsage = "search: Who won the latest Soccer Game in Brazil?")
+@CommandDescription(value = "Command used to search anything in the web. User inputs, recent happenings. Anything that might be in the internet.")
 public class SearchWebCommand extends WebRequestTriggeredCommand {
 
+
+    @Describe
+    private String query;
 
     @Override
     public void start() {

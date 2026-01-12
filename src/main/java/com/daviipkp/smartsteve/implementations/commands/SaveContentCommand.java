@@ -3,6 +3,7 @@ package com.daviipkp.smartsteve.implementations.commands;
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
+import com.daviipkp.SteveJsoning.annotations.Describe;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.services.SpringContext;
 import org.springframework.ai.document.Document;
@@ -13,15 +14,15 @@ import java.util.List;
 import java.util.Map;
 
 @CommandDescription(value = "Use to save important content on database. Anything saved here might be consulted in the future.",
-        possibleArguments = "content: <String>",
-        exampleUsage = "content: User mother's birthday date is November 17th\ncontent: Startup Protocol is about doing this or that")
-public class InstantSaveContentCommand extends InstantCommand {
+        exampleUsage = "content: User mother's birthday date is November 17th")
+public class SaveContentCommand extends InstantCommand {
 
-    public InstantSaveContentCommand() {
+    @Describe
+    private String content;
+
+    public SaveContentCommand() {
         setCommand(() -> {
             VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
-
-            String content = getArgument("content");
 
             if (content == null || content.trim().isEmpty()) {
                 SteveCommandLib.systemPrint("no content");
@@ -30,7 +31,7 @@ public class InstantSaveContentCommand extends InstantCommand {
 
             Map<String, Object> d = Map.of(
                     "timestamp", LocalDateTime.now().toString(),
-                    "tipo", "comando_manual"
+                    "type", "manual_save"
             );
 
             Document doc = new Document(content, d);

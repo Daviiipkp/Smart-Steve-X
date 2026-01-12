@@ -5,6 +5,7 @@ import com.daviipkp.SteveCommandLib.instance.Command;
 import com.daviipkp.SteveJsoning.SteveJsoning;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
+import com.daviipkp.smartsteve.Instance.Protocol;
 import com.daviipkp.smartsteve.Instance.SteveResponse;
 import com.daviipkp.smartsteve.Utils;
 import org.springframework.ai.document.Document;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -45,7 +47,7 @@ public class LLMService {
         lastTick = System.currentTimeMillis();
     }
 
-    private ChatMessage finalCallModel(String fullPromptText, String userPrompt) {
+    public ChatMessage finalCallModel(String fullPromptText, String userPrompt) {
         String escapedPrompt = fullPromptText
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -95,7 +97,13 @@ public class LLMService {
                 try {
                     Command command = Utils.getCommandByName(cmd);
                     for(String argName : s.action.get(cmd).keySet()) {
-                        command.setArgument(argName,  s.action.get(cmd).get(argName));
+                        try {
+                            Field field = command.getClass().getDeclaredField(argName);
+                            field.setAccessible(true);
+
+                            field.set(command, s.action.get(cmd).get(argName));
+                        } catch (NoSuchFieldException e) {
+                        }
                     }
                     SteveCommandLib.addCommand(command);
                 } catch (Exception e) {
@@ -110,64 +118,6 @@ public class LLMService {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public ChatMessage callDefModel(String userPrompt) {
-        String fullPromptText = String.format(Constants.getDefaultPrompt(true, false, false), Utils.getCommandNamesWithDesc())
-                + "\n" + userPrompt;
-        return finalCallModel(fullPromptText, userPrompt);
-    }
-
-    public ChatMessage callDefInstructedModel(String userPrompt, String sysInstructions, boolean sendCommands) {
-        String fullPromptText;
-        if(sendCommands) {
-            fullPromptText = String.format(Constants.getDefaultPrompt(sendCommands, false, true), Utils.getCommandNamesWithDesc(), sysInstructions)
-                    + "\n" + userPrompt;
-        }else{
-            fullPromptText = String.format(Constants.getDefaultPrompt(sendCommands, false, true), sysInstructions)
-                    + "\n" + userPrompt;
-        }
-        return finalCallModel(fullPromptText, userPrompt);
-    }
-
-    public  ChatMessage callDefContextedModel(String userPrompt, String context) {
-        String fullPromptText = String.format(Constants.getDefaultPrompt(true, true, false, true), Utils.getCommandNamesWithDesc(), getMemoryConsult(userPrompt), context)
-                + "\n" + userPrompt;
-        return finalCallModel(fullPromptText, userPrompt);
-    }
-
-    public ChatMessage callDefModel(String userPrompt, String context, String sysInstructions) {
-        String fullPromptText = String.format(Constants.getDefaultPrompt(true, true, true), Utils.getCommandNamesWithDesc(), context, sysInstructions)
-                + "\n" + userPrompt;
-        return finalCallModel(fullPromptText, userPrompt);
-    }
-
-    public String getMemoryConsult(String query) {
-        VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
-
-        SearchRequest request = SearchRequest.query(query)
-                .withTopK(5)
-                .withSimilarityThreshold(0.5);
-
-        List<Document> r = vectorStore.similaritySearch(request);
-
-        StringBuilder sb = new StringBuilder();
-        if(Constants.MEMORY_DEBUG) {
-            SteveCommandLib.systemPrint("Trying to get Memory Consult");
-        }
-
-        for (Document doc : r) {
-            String c = doc.getContent();
-            Map<String, Object> m = doc.getMetadata();
-            sb.append("- ").append(c).append("\n");
-            if(Constants.MEMORY_DEBUG) {
-                SteveCommandLib.systemPrint("Memory added: " + c);
-            }
-        }
-
-
-        return sb.toString();
-
     }
 
 }

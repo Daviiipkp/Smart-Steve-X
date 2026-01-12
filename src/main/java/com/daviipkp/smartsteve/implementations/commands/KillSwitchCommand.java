@@ -1,15 +1,16 @@
 package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
-import com.daviipkp.smartsteve.services.EarService;
+import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 
-public class InstantTurnOffVoiceTypeCommand extends InstantCommand {
+@CommandDescription(value = "Used to kill instantly the system without arguments.")
+public class KillSwitchCommand extends InstantCommand {
 
-    public InstantTurnOffVoiceTypeCommand(EarService eService) {
+    public KillSwitchCommand() {
         setCommand(new Runnable() {
             @Override
             public void run() {
-                eService.stopVoiceTyping();
+
             }
         });
     }

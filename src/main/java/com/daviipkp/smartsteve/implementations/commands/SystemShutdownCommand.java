@@ -2,18 +2,20 @@ package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
+import com.daviipkp.SteveJsoning.annotations.Describe;
 
 import java.io.IOException;
 
-@CommandDescription(value = "Command designed to shutdown the computer/system. Argument is time in seconds for it to shutdown. No argument means instantly.",
-        possibleArguments = "time: <number in seconds>",
-        exampleUsage = "time: 300")
-public class InstantSystemShutdownCommand extends InstantCommand {
+@CommandDescription(value = "Command designed to shutdown the computer/system.")
+public class SystemShutdownCommand extends InstantCommand {
 
-    public InstantSystemShutdownCommand() {
+    @Describe(description = "<Time in seconds>")
+    private String time;
+
+    public SystemShutdownCommand() {
         setCommand(new Runnable() {
             public void run() {
-                ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", getArgument("time"));
+                ProcessBuilder pb = new ProcessBuilder("shutdown", "/s", "/f", "/t", time);
                 try {
                     pb.start();
                 } catch (IOException e) {

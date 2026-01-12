@@ -5,10 +5,11 @@ import com.daviipkp.SteveCommandLib.instance.QueuedCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
 
-@CommandDescription(value = "Forces the Command Queue to wait before executing another command. Note that Instant Commands will not wait for this command to execute.",
-        possibleArguments = "time: <number in seconds>",
-        exampleUsage = "time: 300")
+@CommandDescription(value = "Forces the Command Queue to wait before executing another command.")
 public class WaitCommand extends QueuedCommand {
+
+    @Describe
+    private long time;
 
     private long counter = 0;
 
@@ -18,14 +19,9 @@ public class WaitCommand extends QueuedCommand {
     }
 
     @Override
-    public String getDescription() {
-        return "";
-    }
-
-    @Override
     public void execute(long delta) {
         this.counter += delta;
-        if(this.counter >= Long.parseLong(getArgument("time")) * 1000) {
+        if(this.counter >= (time * 1000)) {
             finish();
         }
         super.execute(delta);

@@ -2,6 +2,7 @@ package com.daviipkp.smartsteve.implementations.commands;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.TriggeredCommand;
+import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 
 import java.io.IOException;
 import java.net.URI;
@@ -58,11 +59,6 @@ public class WebRequestTriggeredCommand extends TriggeredCommand {
     @Override
     public void handleError(Exception e) {
 
-    }
-
-    @Override
-    public String getDescription() {
-        return "";
     }
 
     @Override
