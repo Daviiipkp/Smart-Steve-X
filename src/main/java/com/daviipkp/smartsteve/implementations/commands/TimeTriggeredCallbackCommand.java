@@ -3,25 +3,35 @@ package com.daviipkp.smartsteve.implementations.commands;
 import com.daviipkp.SteveCommandLib.instance.TriggeredCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
+import com.daviipkp.smartsteve.prompt.Prompt;
+import com.daviipkp.smartsteve.services.LLMService;
+import com.daviipkp.smartsteve.services.SpringContext;
 
 import java.time.LocalDateTime;
 
-@CommandDescription(value = "Used to have a callback when a certain time comes. Useful if the user asks a Instant Command to happen in a specific time.",
-        exampleUsage = "time: 1/1/2026 3:00PM")
+@CommandDescription(value = "Used to have a callback when a certain time comes. Useful if the user asks a Instant Command to happen in a specific time.")
 public class TimeTriggeredCallbackCommand extends TriggeredCommand {
 
     @Describe(description = "<Formatted Date/Time>")
     private String time;
 
-    private final LocalDateTime triggerTime;
+    @Describe
+    private String instructions;
 
-    public TimeTriggeredCallbackCommand() {
-        triggerTime = LocalDateTime.parse(time);
-    }
+    @Describe
+    private String context;
+
+    private LocalDateTime triggerTime;
 
     @Override
     public boolean checkTrigger() {
-        return triggerTime.isAfter(LocalDateTime.now());
+        return LocalDateTime.now().isAfter(triggerTime);
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        triggerTime = LocalDateTime.parse(time);
     }
 
     @Override
@@ -31,7 +41,8 @@ public class TimeTriggeredCallbackCommand extends TriggeredCommand {
 
     @Override
     public void execute(long delta) {
-
+        SpringContext.getBean(LLMService.class).finalCallModel(Prompt.getCallBackPrompt(instructions, context));
+        finish();
     }
 
 

@@ -7,6 +7,7 @@ import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.Protocol;
+import com.daviipkp.smartsteve.services.DualBrainService;
 import com.daviipkp.smartsteve.services.LLMService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,9 +37,9 @@ public class AddCommandToProtocolCommand extends InstantCommand {
         setCommand(new Runnable() {
             @Override
             public void run() {
-                LLMService llmS = SpringContext.getBean(LLMService.class);
+                DualBrainService dbs = SpringContext.getBean(DualBrainService.class);
                 VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
-                Map<Protocol, String> p = llmS.getProtocols(name, 1);
+                Map<Protocol, String> p = dbs.getProtocols(1, name);
                 if(p.isEmpty()) {
                     throw new RuntimeException("No protocols found with name " + name);
                 }

@@ -5,20 +5,19 @@ import com.daviipkp.SteveCommandLib.instance.Command;
 import com.daviipkp.SteveCommandLib.instance.QueuedCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
+import com.daviipkp.smartsteve.prompt.Prompt;
 import com.daviipkp.smartsteve.services.LLMService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import lombok.Builder;
 import lombok.Getter;
-
-@Builder
-@CommandDescription(value = "Use when you need a callback after other commands. If you want to be called for another function after some time, use this after a WaitCommand, but remember to tell the next Callback model to not repeat what you've said, just confirm the order.",
-        exampleUsage = "system_instructions: User asked me to turn on TV. I turned it on. Send a success message.")
+import lombok.NoArgsConstructor;
+@CommandDescription(value = "Use when you need a callback after other commands. If you want to be called for another function after some time, use this after a WaitCommand, but remember to tell the next Callback model to not repeat what you've said, just confirm the order.")
 public class CallbackCommand extends QueuedCommand {
 
     @Describe
-    private String user_prompt;
+    private String instructions;
     @Describe
-    private String system_instructions;
+    private String context;
 
     @Override
     public void handleError(Exception e) {
@@ -29,12 +28,21 @@ public class CallbackCommand extends QueuedCommand {
     public void execute(long delta) {
         super.execute(delta);
         LLMService llm = SpringContext.getBean(LLMService.class);
-        llm.callDefInstructedModel(user_prompt, system_instructions, true);
+        llm.finalCallModel(Prompt.getCallBackPrompt(instructions, context));
         finish();
     }
 
     public static void asError(Class<? extends Command> command, Exception exception) throws InstantiationException, IllegalAccessException {
-        SteveCommandLib.addCommand(CallbackCommand.builder().system_instructions("User asked for " + command.getSimpleName() + " but it failed with exception " + exception.getClass().getSimpleName() + " and message " + exception.getMessage()).build());
+        SteveCommandLib.addCommand(CallbackCommand.class.newInstance().setInstructions("User asked for " + command.getSimpleName() + " but it failed with exception " + exception.getClass().getSimpleName() + " and message " + exception.getMessage()).build());
+    }
+
+    public CallbackCommand setInstructions(String system_instructions) {
+        this.instructions = system_instructions;
+        return this;
+    }
+
+    public CallbackCommand build() {
+        return this;
     }
 
 }

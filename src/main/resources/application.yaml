@@ -14,11 +14,11 @@ spring:
                 base-url: https://ai.hackclub.com/proxy
                 options:
                     model: openai/text-embedding-3-small
+                    dimensions: 1536
         vectorstore:
             pgvector:
                 initialize-schema: true
                 index-type: HNSW
-                dimension: 1536
 
     jpa:
         database-platform: org.hibernate.dialect.PostgreSQLDialect

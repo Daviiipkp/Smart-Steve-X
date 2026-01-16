@@ -1,10 +1,16 @@
 package com.daviipkp.smartsteve.prompt;
 
+import com.daviipkp.SteveCommandLib.SteveCommandLib;
+import com.daviipkp.SteveJsoning.SteveJsoning;
+import com.daviipkp.smartsteve.Constants;
+import com.daviipkp.smartsteve.Instance.Protocol;
 import com.daviipkp.smartsteve.Utils;
 import com.daviipkp.smartsteve.services.DualBrainService;
 import com.daviipkp.smartsteve.services.LLMService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import lombok.Getter;
+
+import java.time.LocalDateTime;
 
 @Getter
 public class Prompt {
@@ -12,21 +18,33 @@ public class Prompt {
     private static final DualBrainService dbs = SpringContext.getBean(DualBrainService.class);
 
     public static String getDefaultPrompt(String userPrompt) {
-        return createPrompt(system_role, system_rules, output_format, getContext(), getMemoryConsultation(userPrompt), getUserPrompt(userPrompt));
+        return createPrompt(system_role, system_rules, output_format, getCommandList(userPrompt), getProtocolList(), getContext(), getMemoryConsultation(userPrompt), getUserPrompt(userPrompt));
+    }
+
+    public static String getCallBackPrompt(String instructions, String context) {
+        return createPrompt(system_role, system_rules, output_format, getCommandList(instructions, context), getProtocolList(), getContext(context), getSystemInstructions(instructions));
     }
 
     public static String getStartupPrompt() {
-        return createPrompt(system_role, system_rules, output_format, first_boot);
+        return createPrompt(system_role, system_rules, output_format, getCommandList(first_boot.getContent()), first_boot);
     }
 
     public static String createPrompt(PromptComponent... components) {
         StringBuilder sb = new StringBuilder();
+        sb.append("Prompt Time: " + LocalDateTime.now() + "\n");
         for (PromptComponent component : components) {
-            sb.append("\n");
-            sb.append("### ").append(component.getHeader().toUpperCase());
-            sb.append(component.getContent());
-            sb.append("\n");
-            sb.append(component.getFooter());
+            if(!component.getContent().isEmpty()) {
+                sb.append("\n");
+                sb.append("### ").append(component.getHeader().toUpperCase());
+                sb.append("\n");
+                sb.append(component.getContent());
+                sb.append("\n");
+                sb.append(component.getFooter());
+            }else{
+                if(Constants.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG) {
+                    SteveCommandLib.systemPrint(component.getHeader());
+                }
+            }
         }
         return sb.toString();
     }
@@ -55,9 +73,31 @@ public class Prompt {
                 .content(dbs.getContext()).build();
     }
 
+    private static PromptComponent getContext(String arg0) {
+        return PromptComponent.builder().header("prompt context")
+                .content(arg0).build();
+    }
+
     private static PromptComponent getSystemInstructions(String instructions) {
         return PromptComponent.builder().header("system instructions")
                 .content(instructions).build();
+    }
+
+    private static PromptComponent getCommandList(String... query) {
+        return PromptComponent.builder().header("list of available commands")
+                .content(Utils.getCommandNamesWithDesc()).build();
+    }
+
+    private static PromptComponent getProtocolList(String... query) {
+        StringBuilder sb = new StringBuilder();
+        for(Protocol p : dbs.getProtocols(5, query).keySet()) {
+            sb.append(SteveJsoning.stringify(p)).append("\n");
+        }
+        if(sb.toString().isEmpty()) {
+            sb.append("no protocols available.");
+        }
+        return PromptComponent.builder().header("list of available protocols")
+                .content(sb.toString()).build();
     }
 
     private static PromptComponent getUserPrompt(String userPrompt) {
@@ -68,8 +108,8 @@ public class Prompt {
     private static final PromptComponent system_role = PromptComponent.builder().header("system role")
                 .content("""
                         You are Steve, an ultra-efficient assistant.
-                        ALWAYS answer the user with any of the talk commands.
                         ALWAYS respect the Json mandatory system.
+                        Return ONLY the JSON object. Do not include any conversational text, thought process, or markdown code blocks (like ```json).
                         """).build();
 
     private static final PromptComponent output_format = PromptComponent.builder().header("output format - mandatory")
@@ -92,7 +132,7 @@ public class Prompt {
                             "SystemShutdownCommand": {
                               "time": "20"
                             },
-                            "InstantTalkCommand": {
+                            "TalkCommand": {
                                 "message": "Yes, sir. Shutting down in 20."
                             }
                           },
@@ -103,19 +143,17 @@ public class Prompt {
     private static final PromptComponent system_rules = PromptComponent.builder().header("system rules")
             .content("""
                         1. Persona: Address user as "Sir". English Only.
-                        2. Ultra-Brevity: For successful command executions, the preferred speech is simply "Yes, sir." (Implies: "Done").
-                        3. Strict Command Matching: NEVER invent commands. Check the AVAILABLE COMMANDS list.
-                        4. Refusal vs Help: If the user asks for an action NOT in the list, refuse it.
-                        5. Vague Inputs: If input is meaningless (e.g., "huh", "but", "a"), set "status": "IGNORE", "speech": null, and "memory": null.
+                        2. If it's asked for the user and not system instructions, for successful command executions, the preferred speech is simply "Yes, sir." (Implies: "Done").
+                        3. Know the difference: for simple calls like "Hey, Steve!", the preferred speech is simply "Yes, sir?" (Implies: "What's your request?")
+                        4. Strict Command Matching: NEVER invent commands. Check the AVAILABLE COMMANDS list.
                         """).build();
-
-    private static final PromptComponent command_list = PromptComponent.builder().header("list of available commands")
-            .content(Utils.getCommandNamesWithDesc()).build();
 
     private static final PromptComponent first_boot = PromptComponent.builder().header("first boot system instructions")
             .content("""
                 This is the first boot call, which means system was just started.
                 This system instruction is generated automatically.
+                Wake up time is 8:00 AM. This is when you should play the alarm.
+                No need to say anything when you schedule the alarm.
                 """).build();
 
 }

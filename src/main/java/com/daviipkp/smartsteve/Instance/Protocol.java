@@ -6,6 +6,7 @@ import com.daviipkp.smartsteve.Utils;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,14 @@ public class Protocol {
             try {
                 Command command = Utils.getCommandByName(cmd);
                 for(String argName : commands.get(cmd).keySet()) {
-                    command.setArgument(argName,  commands.get(cmd).get(argName));
+                    try {
+                        Field field = command.getClass().getDeclaredField(argName);
+                        field.setAccessible(true);
+
+                        field.set(command, commands.get(cmd).get(argName));
+                    } catch (NoSuchFieldException e) {
+                        e.printStackTrace();
+                    }
                 }
                 SteveCommandLib.addCommand(command);
             } catch (Exception e) {

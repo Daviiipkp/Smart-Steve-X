@@ -7,20 +7,21 @@ import com.daviipkp.smartsteve.services.EarService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import com.daviipkp.smartsteve.services.VoiceService;
 
-@CommandDescription(value = "Use to talk anything that you want. Any message as argument of this command will be spoke directly to the user.",
-        exampleUsage = "message: Hello, sir")
+@CommandDescription(value = "Use to talk anything that you want. Any message as argument of this command will be spoke directly to the user. Volume range is 0 to 100, where 100 is a scream and 0 is inaudible. 30 is normal voice.")
 public class TalkCommand extends InstantCommand {
 
     @Describe
     private String message;
 
+    @Describe
+    private float volume;
+
     public TalkCommand() {
         setCommand(new Runnable() {
             @Override
             public void run() {
-                EarService service = SpringContext.getBean(EarService.class);
-                service.stopListening();
-                VoiceService.speak(message, service::resumeListening);
+                VoiceService.setVolume((volume/100));
+                VoiceService.speak(message);
             }
         });
     }

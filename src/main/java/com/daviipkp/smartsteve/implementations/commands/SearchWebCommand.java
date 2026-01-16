@@ -26,9 +26,4 @@ public class SearchWebCommand extends WebRequestTriggeredCommand {
     public void handleError(Exception e) {
 
     }
-
-    @Override
-    public String getDescription() {
-        return "";
-    }
 }

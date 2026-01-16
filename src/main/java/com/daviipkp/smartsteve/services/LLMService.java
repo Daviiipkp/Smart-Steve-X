@@ -93,21 +93,33 @@ public class LLMService {
             SteveResponse s = SteveJsoning.parse(SteveJsoning.valueAtPath("/choices/0/message/content", response.body()), SteveResponse.class);
 
             Set<Class<?>> registeredCmds = Utils.getRegisteredCommands();
-            for(String cmd : s.action.keySet()) {
-                try {
-                    Command command = Utils.getCommandByName(cmd);
-                    for(String argName : s.action.get(cmd).keySet()) {
-                        try {
-                            Field field = command.getClass().getDeclaredField(argName);
-                            field.setAccessible(true);
-
-                            field.set(command, s.action.get(cmd).get(argName));
-                        } catch (NoSuchFieldException e) {
+            if(s.action != null) {
+                for(String cmd : s.action.keySet()) {
+                    try {
+                        Command command = Utils.getCommandByName(cmd);
+                        for(String argName : s.action.get(cmd).keySet()) {
+                            try {
+                                Field field = command.getClass().getDeclaredField(argName);
+                                field.setAccessible(true);
+                                Object obj = s.action.get(cmd).get(argName);
+                                if(field.getType().isAssignableFrom(String.class)) {
+                                    field.set(command, s.action.get(cmd).get(argName));
+                                }else if(field.getType().isAssignableFrom(int.class)) {
+                                    field.set(command, Integer.parseInt(s.action.get(cmd).get(argName)));
+                                }else if(field.getType().isAssignableFrom(float.class)) {
+                                    field.set(command, Float.parseFloat(s.action.get(cmd).get(argName)));
+                                }else if(field.getType().isAssignableFrom(boolean.class)) {
+                                    field.set(command, Boolean.parseBoolean(s.action.get(cmd).get(argName)));
+                                }else if(field.getType().isAssignableFrom(long.class)) {
+                                    field.set(command, Long.parseLong(s.action.get(cmd).get(argName)));
+                                }
+                            } catch (NoSuchFieldException e) {
+                            }
                         }
+                        SteveCommandLib.addCommand(command);
+                    } catch (Exception e) {
+                        System.out.println("Couldn't find command or it needs a constructor parameter. Exception: " + e.getMessage() );
                     }
-                    SteveCommandLib.addCommand(command);
-                } catch (Exception e) {
-                    System.out.println("Could find command or it needs a constructor parameter.");
                 }
             }
 
@@ -119,5 +131,85 @@ public class LLMService {
         }
         return null;
     }
+
+    public void finalCallModel(String fullPromptText) {
+        String escapedPrompt = fullPromptText
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "");
+
+        String jsonBody = """
+        {
+            "model": "%s",
+            "messages": [
+                {
+                    "role": "user", 
+                    "content": "%s"
+                }
+            ]
+        }
+        """.formatted(defaultModel, escapedPrompt);
+
+        try {
+            long time = System.currentTimeMillis();
+            if(Constants.FINAL_PROMPT_DEBUG) {
+                SteveCommandLib.systemPrint("Prompt sent: " + fullPromptText);
+            }
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(defaultProvider))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            SteveCommandLib.systemPrint("Request time: " + (System.currentTimeMillis() - time));
+
+            if (response.statusCode() != 200) {
+                System.err.println("error: " + response.statusCode());
+                System.err.println("error bodyy: " + response.body());
+                return;
+            }
+
+
+            SteveResponse s = SteveJsoning.parse(SteveJsoning.valueAtPath("/choices/0/message/content", response.body()), SteveResponse.class);
+            if(Constants.STEVE_RESPONSE_DEBUG) {
+                SteveCommandLib.systemPrint("STEVE RESPONSE: " + SteveJsoning.valueAtPath("/choices/0/message/content", response.body()));
+            }
+            for(String cmd : s.action.keySet()) {
+                try {
+                    Command command = Utils.getCommandByName(cmd);
+                    for(String argName : s.action.get(cmd).keySet()) {
+                        try {
+                            Field field = command.getClass().getDeclaredField(argName);
+                            field.setAccessible(true);
+                            Object obj = s.action.get(cmd).get(argName);
+                            if(field.getType().isAssignableFrom(String.class)) {
+                                field.set(command, s.action.get(cmd).get(argName));
+                            }else if(field.getType().isAssignableFrom(int.class)) {
+                                field.set(command, Integer.parseInt(s.action.get(cmd).get(argName)));
+                            }else if(field.getType().isAssignableFrom(float.class)) {
+                                field.set(command, Float.parseFloat(s.action.get(cmd).get(argName)));
+                            }else if(field.getType().isAssignableFrom(boolean.class)) {
+                                field.set(command, Boolean.parseBoolean(s.action.get(cmd).get(argName)));
+                            }
+                        } catch (NoSuchFieldException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    SteveCommandLib.addCommand(command);
+                } catch (Exception e) {
+                    System.out.println("Couldn't find command or it needs a constructor parameter. Exception: " );
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

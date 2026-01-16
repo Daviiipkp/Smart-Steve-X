@@ -16,6 +16,27 @@ public class VoiceService {
 
     private static Thread speakThread;
 
+    private static float volume = 1;
+
+    public static void speak(String text) {
+        shutUp();
+        speakThread = new Thread(() -> {
+            try {
+                generateWavFile(text);
+                EarService s = SpringContext.getBean(EarService.class);
+                s.stopListening();
+
+                playWavFile();
+
+                s.resumeListening();
+                shutUp();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        speakThread.start();
+    }
+
     public static void speak(String text, Runnable onComplete) {
         shutUp();
         speakThread = new Thread(() -> {
@@ -60,7 +81,6 @@ public class VoiceService {
 
         Process process = pb.start();
 
-        // Envia o texto
         try (OutputStream os = process.getOutputStream()) {
             os.write(safeText.getBytes(StandardCharsets.UTF_8));
             os.flush();
@@ -71,30 +91,40 @@ public class VoiceService {
             System.err.println("ERRRRRRRRRRR");
         } else {
             File f = new File(TEMP_AUDIO_FILE);
-            System.out.println(">>> Size: " + f.length() + " bytes.");
+            System.out.println("Size: " + f.length() + " bytes.");
         }
+    }
+
+    public static void setVolume(float newVolume) {
+        if (newVolume < 0f) volume = 0f;
+        else if (newVolume > 1f) volume = 1f;
+        else volume = newVolume;
     }
 
     private static void playWavFile() {
         try {
             File audioFile = new File(TEMP_AUDIO_FILE);
-            if (!audioFile.exists() || audioFile.length() < 100) {
-                System.err.println(">>> ERRRRR");
-                return;
-            }
+            if (!audioFile.exists() || audioFile.length() < 100) return;
 
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
+
+            if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+                float dB = (float) (Math.log(volume != 0 ? volume : 0.0001) / Math.log(10.0) * 20.0);
+                gainControl.setValue(dB);
+            }
+
+
             clip.start();
             Thread.sleep(clip.getMicrosecondLength() / 1000);
 
             clip.close();
             audioStream.close();
-
         } catch (Exception e) {
             e.printStackTrace();
-
         }
     }
 }

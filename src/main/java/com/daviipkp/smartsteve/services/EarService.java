@@ -22,7 +22,6 @@ public class EarService {
     private final DualBrainService brain;
     private final VoiceService voiceService;
     private TargetDataLine microphone;
-    private boolean isRunning = true;
     private volatile boolean isPaused = false;
     @Getter
     private boolean voiceTyping;
@@ -74,12 +73,13 @@ public class EarService {
             byte[] buffer = new byte[4096];
             int bytesRead;
 
-            System.out.println(">>> Listening");
+            System.out.println("Listening!");
 
-            while (isRunning) {
-                if (isPaused) {
-                    Thread.sleep(100);
-                    continue;
+            while (true) {
+
+                if(isPaused) {
+                    Thread.sleep(200);
+                   continue;
                 }
 
                 bytesRead = microphone.read(buffer, 0, buffer.length);
@@ -107,17 +107,21 @@ public class EarService {
                                     }
                                 }
                             }
-                            return;
                         }
                         if (recognizer.acceptWaveForm(buffer, bytesRead)) {
                             String jsonResult = recognizer.getResult();
                             String text = extractTextFromVosk(jsonResult);
                             if (text.contains("over")) {
                                 if(text.contains("steve")) {
+                                    text = text.replace("over", "");
                                     System.out.println("User said: " + text);
 
                                     brain.processCommand(text);
+                                }else{
+                                    System.out.println("Ignoring (no steve): " + text);
                                 }
+                            }else{
+                                System.out.println("Ignoring (no over)" + text);
                             }
                         }
                     }

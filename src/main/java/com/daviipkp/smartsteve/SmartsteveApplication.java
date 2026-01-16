@@ -1,6 +1,7 @@
 package com.daviipkp.smartsteve;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
+import com.daviipkp.smartsteve.prompt.Prompt;
 import com.daviipkp.smartsteve.services.LLMService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import org.springframework.boot.SpringApplication;
@@ -20,7 +21,7 @@ public class SmartsteveApplication {
 
         for (String arg : args) {
             if (arg.equals("--FirstBoot")) {
-                SpringContext.getBean(LLMService.class).callDefInstructedModel("", Constants.getFirstBootInstructions(), true);
+                SpringContext.getBean(LLMService.class).finalCallModel(Prompt.getStartupPrompt());
             }
         }
         if(Constants.CLEAR_MEMO_ON_STARTUP) {

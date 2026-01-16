@@ -35,6 +35,7 @@ public class Utils {
                 return (Command) c.newInstance();
             }
         }
+        System.out.println("Command not found:" + s);
         return null;
     }
 

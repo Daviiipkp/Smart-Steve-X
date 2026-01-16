@@ -16,4 +16,6 @@ public class Constants {
     public static final boolean DATABASE_SAVING_DEBUG = false;
     public static final boolean FINAL_PROMPT_DEBUG = true;
 
+    public static final boolean PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG = true;
+
 }

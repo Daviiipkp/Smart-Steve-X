@@ -64,10 +64,6 @@ public class DualBrainService {
 
         ChatMessage cResponse = fResponse.get();
 
-        if(Constants.STEVE_RESPONSE_DEBUG) {
-            SteveCommandLib.systemPrint(cResponse.toString());
-        }
-
         chatRepo.save(cResponse);
         if(Constants.DATABASE_SAVING_DEBUG) {
             SteveCommandLib.systemPrint(">> Memória salva no banco H2: " + cResponse);
@@ -99,6 +95,7 @@ public class DualBrainService {
     }
 
     public String getMemoryConsult(String query) {
+        StringBuilder sb = new StringBuilder();
         VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
 
         SearchRequest request = SearchRequest.query(query)
@@ -106,8 +103,6 @@ public class DualBrainService {
                 .withSimilarityThreshold(0.5);
 
         List<Document> r = vectorStore.similaritySearch(request);
-
-        StringBuilder sb = new StringBuilder();
         if(Constants.MEMORY_DEBUG) {
             SteveCommandLib.systemPrint("Trying to get Memory Consult");
         }
@@ -126,35 +121,43 @@ public class DualBrainService {
 
     }
 
-    public Map<Protocol, String> getProtocols(String query, int top) {
-        VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
-
-        SearchRequest request = SearchRequest.query(query)
-                .withTopK(top)
-                .withSimilarityThreshold(0.5);
-
-        List<Document> r = vectorStore.similaritySearch(request);
-
-        if(Constants.MEMORY_DEBUG) {
-            SteveCommandLib.systemPrint("Trying to get Similar");
-        }
+    public Map<Protocol, String> getProtocols(int top, String... query) {
+//        VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
+//        String q = String.join(" ", query);
+//        SearchRequest request = SearchRequest.query(q)
+//                .withTopK(top)
+//                .withSimilarityThreshold(0.5);
+//
+//
+//        List<Document> r;
+//
+//        try {
+//            r = vectorStore.similaritySearch(request);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw e;
+//        }
+//
+//        if(Constants.MEMORY_DEBUG) {
+//            SteveCommandLib.systemPrint("Trying to get Similar protocol");
+//        }
         Map<Protocol, String> toReturn = new HashMap<>();
-        for (Document doc : r) {
-            String c = doc.getContent();
-            Map<String, Object> m = doc.getMetadata();
-            try {
-                String objType = (String)m.get("type");
-                if(objType.equals("protocol")) {
-                    toReturn.put(SteveJsoning.parse(c, Protocol.class), doc.getId());
-                    if(Constants.MEMORY_DEBUG) {
-                        SteveCommandLib.systemPrint("Similar added: " + c);
-                    }
-                }
-            }catch (Exception e) {
-
-            }
-
-        }
+//        for (Document doc : r) {
+//            String c = doc.getContent();
+//            Map<String, Object> m = doc.getMetadata();
+//            try {
+//                String objType = (String)m.get("type");
+//                if(objType.equals("protocol")) {
+//                    toReturn.put(SteveJsoning.parse(c, Protocol.class), doc.getId());
+//                    if(Constants.MEMORY_DEBUG) {
+//                        SteveCommandLib.systemPrint("Similar added: " + c);
+//                    }
+//                }
+//            }catch (Exception e) {
+//
+//            }
+//
+//        }
 
 
         return toReturn;
