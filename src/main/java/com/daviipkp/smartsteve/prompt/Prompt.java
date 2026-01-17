@@ -104,7 +104,6 @@ public class Prompt {
         return PromptComponent.builder().header("user prompt")
                 .content(userPrompt).build();
     }
-
     private static final PromptComponent system_role = PromptComponent.builder().header("system role")
                 .content("""
                         You are Steve, an ultra-efficient assistant.
