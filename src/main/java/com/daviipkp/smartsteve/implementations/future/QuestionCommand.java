@@ -1,10 +1,7 @@
-package com.daviipkp.smartsteve.implementations.commands;
+package com.daviipkp.smartsteve.implementations.future;
 
 import com.daviipkp.SteveCommandLib.instance.QueuedCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
 @CommandDescription(value = "",
         exampleUsage = "")

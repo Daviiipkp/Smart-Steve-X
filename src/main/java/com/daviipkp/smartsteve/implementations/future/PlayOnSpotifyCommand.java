@@ -1,4 +1,4 @@
-package com.daviipkp.smartsteve.implementations.commands;
+package com.daviipkp.smartsteve.implementations.future;
 
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;

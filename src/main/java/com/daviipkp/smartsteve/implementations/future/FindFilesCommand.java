@@ -1,11 +1,11 @@
-package com.daviipkp.smartsteve.implementations.commands;
+package com.daviipkp.smartsteve.implementations.future;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
 import com.daviipkp.smartsteve.Configuration;
-import com.daviipkp.smartsteve.Constants;
+import com.daviipkp.smartsteve.implementations.commands.CallbackCommand;
 
 import java.awt.Desktop;
 import java.io.File;

@@ -27,9 +27,7 @@ public class TalkCommand extends QueuedCommand {
     }
 
     @Override
-    public void handleError(Exception e) {
-
-    }
+    public void handleError(Exception e) {}
 
     @Override
     public void execute(long delta) {

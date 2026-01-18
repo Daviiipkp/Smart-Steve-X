@@ -12,6 +12,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,18 @@ public class SmartsteveApplication {
             LLMService.warmUp();
         }
 
+        boolean crash = false;
+        for(Field f : Configuration.class.getDeclaredFields()) {
+            if(f == null) {
+                crash = true;
+                System.out.println(">>> Configuration field " + f.getName() + " has not been set. Please set it before starting the program.");
+            }
+        }
+        if(crash == true) {
+            throw new RuntimeException("All variables on Configuration file must be set");
+        }
+
+
         if(Configuration.CLEAR_MEMO_ON_STARTUP) {
             try {
                 JdbcTemplate jdbcTemplate = SpringContext.getBean(JdbcTemplate.class);
@@ -43,7 +56,11 @@ public class SmartsteveApplication {
             }
         }
 
-        commandList = Utils.getRegisteredCommands("com.daviipkp.smartsteve.implementations.commands", Configuration.USER_COMMAND_PACKAGE);
+        if(Configuration.USE_DEFAULT_COMMANDS) {
+            commandList = Utils.getRegisteredCommands("com.daviipkp.smartsteve.implementations.commands", Configuration.USER_COMMAND_PACKAGE);
+        }else{
+            commandList = Utils.getRegisteredCommands(Configuration.USER_COMMAND_PACKAGE);
+        }
 
 
         for (String arg : args) {

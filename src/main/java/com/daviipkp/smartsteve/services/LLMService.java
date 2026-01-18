@@ -27,7 +27,7 @@ public class LLMService {
 
     private static final String defaultProvider = Configuration.LLM_PROVIDER;
     private static final String defaultModel = Configuration.MODEL_NAME;
-    private static final String apiKey = Configuration.API_KEY;
+    private static final String apiKey = Configuration.LLM_API_KEY;
 
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)

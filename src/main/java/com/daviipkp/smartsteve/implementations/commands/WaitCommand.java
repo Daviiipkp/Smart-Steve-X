@@ -14,9 +14,7 @@ public class WaitCommand extends QueuedCommand {
     private long counter = 0;
 
     @Override
-    public void handleError(Exception e) {
-
-    }
+    public void handleError(Exception e) {}
 
     @Override
     public void execute(long delta) {

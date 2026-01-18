@@ -1,8 +1,7 @@
-package com.daviipkp.smartsteve.implementations.commands;
+package com.daviipkp.smartsteve.implementations.future;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.TriggeredCommand;
-import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 
 import java.io.IOException;
 import java.net.URI;
