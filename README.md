@@ -17,10 +17,16 @@ Add Smart Steve to your project.
 
 **Maven:**
 ```
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
 <dependency>
-    <groupId>com.daviipkp</groupId>
-    <artifactId>smartstevex</artifactId>
-    <version>1.0</version>
+    <groupId>com.github.Daviiipkp</groupId> <artifactId>Smart-Steve-X</artifactId>
+    <version>v1.0</version>
 </dependency>
 ```
 
