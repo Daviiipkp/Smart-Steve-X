@@ -4,6 +4,7 @@ import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
+import com.daviipkp.smartsteve.Configuration;
 import com.daviipkp.smartsteve.Constants;
 
 import java.awt.Desktop;
@@ -36,7 +37,7 @@ public class FindFilesCommand extends InstantCommand {
                 if (!Files.exists(root)) {
                     throw new RuntimeException("Root path does not exist: " + startPath);
                 }
-                if (Constants.MEMORY_DEBUG) {
+                if(Configuration.MEMORY_DEBUG) {
                     SteveCommandLib.systemPrint("Searching for file: " + fileName + " in " + startPath);
                 }
 

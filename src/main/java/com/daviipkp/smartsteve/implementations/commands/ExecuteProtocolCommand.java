@@ -6,6 +6,7 @@ import com.daviipkp.SteveJsoning.annotations.Describe;
 import com.daviipkp.smartsteve.Instance.Protocol;
 import com.daviipkp.smartsteve.services.DualBrainService;
 import com.daviipkp.smartsteve.services.LLMService;
+import com.daviipkp.smartsteve.services.ProtocolsService;
 import com.daviipkp.smartsteve.services.SpringContext;
 
 import java.util.Map;
@@ -20,7 +21,7 @@ public class ExecuteProtocolCommand extends InstantCommand {
         setCommand(new Runnable() {
             @Override
             public void run() {
-                Map<Protocol, String> protocols = SpringContext.getBean(DualBrainService.class).getProtocols(1, name);
+                Map<Protocol, String> protocols = SpringContext.getBean(ProtocolsService.class).getProtocols(1, name);
                 if(protocols.isEmpty()) {
                     throw new RuntimeException("No protocols found with name " + name);
                 }

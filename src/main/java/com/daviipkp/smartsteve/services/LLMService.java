@@ -3,6 +3,7 @@ package com.daviipkp.smartsteve.services;
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.Command;
 import com.daviipkp.SteveJsoning.SteveJsoning;
+import com.daviipkp.smartsteve.Configuration;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import com.daviipkp.smartsteve.Instance.SteveResponse;
@@ -24,10 +25,9 @@ import java.time.Duration;
 @Service
 public class LLMService {
 
-    private static final String defaultProvider = "https://api.groq.com/openai/v1/chat/completions";
-    private static final String defaultModel = "openai/gpt-oss-120b";
-    private static final String apiKeyName = "${groq.api.key}";
-    static String apiKey;
+    private static final String defaultProvider = Configuration.LLM_PROVIDER;
+    private static final String defaultModel = Configuration.MODEL_NAME;
+    private static final String apiKey = Configuration.API_KEY;
 
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
@@ -36,11 +36,6 @@ public class LLMService {
             .build();
 
     private long lastTick = 0;
-
-    @Value(apiKeyName)
-    public void setApiKey(String value) {
-        apiKey = value;
-    }
 
     public static void warmUp() {
         new Thread(() -> {
@@ -95,8 +90,8 @@ public class LLMService {
         }
         """.formatted(defaultModel, escapedPrompt);
 
-        if(Constants.FINAL_PROMPT_DEBUG) {
-            SteveCommandLib.systemPrint("Prompt sent length: " + fullPromptText.length());
+        if(Configuration.FINAL_PROMPT_DEBUG) {
+            SteveCommandLib.systemPrint("Final prompt: \n" + jsonBody);
         }
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -108,36 +103,20 @@ public class LLMService {
 
         long time = System.currentTimeMillis();
         HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        SteveCommandLib.systemPrint("Latency: " + (System.currentTimeMillis() - time) + "ms");
+        if(Configuration.PROMPT_LATENCY_DEBUG) {
+            SteveCommandLib.systemPrint("Latency: " + (System.currentTimeMillis() - time) + "ms");
+        }
 
         return response;
     }
 
-    private String extractToken(String jsonPart) {
-        try {
-            int contentIndex = jsonPart.indexOf("\"content\":\"");
-            if (contentIndex == -1) return null;
-
-            int start = contentIndex + 11;
-            int end = jsonPart.indexOf("\"", start);
-            while (jsonPart.charAt(end - 1) == '\\') {
-                end = jsonPart.indexOf("\"", end + 1);
-            }
-
-            String rawToken = jsonPart.substring(start, end);
-            return rawToken.replace("\\n", "\n").replace("\\\"", "\"");
-
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     public ChatMessage finalCallModel(String fullPromptText, String userPrompt) {
         try {
             HttpResponse<String> response = sendRequest(fullPromptText);
 
             if (response.statusCode() != 200) {
-                System.err.println("Groq Error: " + response.statusCode() + " Body: " + response.body());
+                System.err.println("Error: \n" + response.statusCode() + " Body: \n" + response.body());
                 return null;
             }
 
@@ -146,7 +125,7 @@ public class LLMService {
             return new ChatMessage(userPrompt, SteveJsoning.valueAtPath("/choices/0/message/content", response.body()));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Exception caught with message: " + e.getMessage());
         }
         return null;
     }
@@ -156,18 +135,18 @@ public class LLMService {
             HttpResponse<String> response = sendRequest(fullPromptText);
 
             if (response.statusCode() != 200) {
-                System.err.println("Groq Error: " + response.statusCode());
+                System.err.println("Error: " + response.statusCode());
                 return;
             }
 
-            if(Constants.STEVE_RESPONSE_DEBUG) {
-                SteveCommandLib.systemPrint("STEVE RAW: " + response.body());
+            if(Configuration.STEVE_RESPONSE_DEBUG) {
+                SteveCommandLib.systemPrint("Steve's raw response: " + response.body());
             }
 
             processCommands(response.body());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Exception caught with message: " + e.getMessage());
         }
     }
 
@@ -204,6 +183,8 @@ public class LLMService {
                                     field.set(command, Boolean.parseBoolean(rawValue));
                                 } else if(type.isAssignableFrom(long.class) || type.isAssignableFrom(Long.class)) {
                                     field.set(command, Long.parseLong(rawValue));
+                                }else{
+                                    throw new IllegalArgumentException("You must not use non-primitive types as command arguments (with @Describe annotations)");
                                 }
                             } catch (NoSuchFieldException e) {
                                 System.err.println("Field '" + argName + "' not found in command " + cmd);
@@ -216,7 +197,7 @@ public class LLMService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error during command processing: " + e.getMessage());
         }
     }
 }

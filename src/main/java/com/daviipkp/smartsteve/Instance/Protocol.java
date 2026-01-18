@@ -36,7 +36,9 @@ public class Protocol {
 
                         field.set(command, commands.get(cmd).get(argName));
                     } catch (NoSuchFieldException e) {
-                        e.printStackTrace();
+                        System.out.println("Tried to get field " + argName + " on command " + cmd + " but it failed. Ignoring command on protocol " + name);
+                    }catch (NullPointerException e) {
+                        System.out.println("Tried executing a command called " + cmd + " on protocol " + name + " but there is no registered command with this name.");
                     }
                 }
                 SteveCommandLib.addCommand(command);

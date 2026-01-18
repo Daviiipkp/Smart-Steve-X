@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutionException;
 @CrossOrigin("*")
 @RequestMapping("/api/steve")
 public class SteveController {
-
     private final DualBrainService dbs;
 
     public SteveController(DualBrainService dbs) {
@@ -18,12 +17,12 @@ public class SteveController {
 
     @GetMapping("/talked")
     public String userTalked(@RequestParam String command) throws ExecutionException, InterruptedException {
-        return dbs.processCommand(command);
+        return dbs.processUserPrompt(command);
     }
 
     @PostMapping("/chat")
     public String  userChat(@RequestParam String command) throws ExecutionException, InterruptedException {
-        return dbs.processCommand(command);
+        return dbs.processUserPrompt(command);
     }
 
 }

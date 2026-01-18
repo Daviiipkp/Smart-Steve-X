@@ -31,8 +31,4 @@ public class ChatMessage {
         this.steveResponse = steveResponse;
         this.timestamp = LocalDateTime.now();
     }
-
-
-
-
 }

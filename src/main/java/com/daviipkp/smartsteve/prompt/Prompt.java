@@ -2,11 +2,12 @@ package com.daviipkp.smartsteve.prompt;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveJsoning.SteveJsoning;
+import com.daviipkp.smartsteve.Configuration;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.Protocol;
 import com.daviipkp.smartsteve.Utils;
 import com.daviipkp.smartsteve.services.DualBrainService;
-import com.daviipkp.smartsteve.services.LLMService;
+import com.daviipkp.smartsteve.services.ProtocolsService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import lombok.Getter;
 
@@ -31,7 +32,7 @@ public class Prompt {
 
     public static String createPrompt(PromptComponent... components) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Prompt Time: " + LocalDateTime.now() + "\n");
+        sb.append("Prompt Created at: ").append(LocalDateTime.now()).append("\n");
         for (PromptComponent component : components) {
             if(!component.getContent().isEmpty()) {
                 sb.append("\n");
@@ -41,7 +42,7 @@ public class Prompt {
                 sb.append("\n");
                 sb.append(component.getFooter());
             }else{
-                if(Constants.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG) {
+                if(Configuration.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG) {
                     SteveCommandLib.systemPrint(component.getHeader());
                 }
             }
@@ -90,7 +91,7 @@ public class Prompt {
 
     private static PromptComponent getProtocolList(String... query) {
         StringBuilder sb = new StringBuilder();
-        for(Protocol p : dbs.getProtocols(5, query).keySet()) {
+        for(Protocol p : SpringContext.getBean(ProtocolsService.class).getProtocols(Configuration.PROTOCOL_SEARCH_NUMBER, query).keySet()) {
             sb.append(SteveJsoning.stringify(p)).append("\n");
         }
         if(sb.toString().isEmpty()) {
@@ -141,18 +142,13 @@ public class Prompt {
 
     private static final PromptComponent system_rules = PromptComponent.builder().header("system rules")
             .content("""
-                        1. Persona: Address user as "Sir". English Only.
+                        1. Be extremely direct on your responses.
                         2. If it's asked for the user and not system instructions, for successful command executions, the preferred speech is simply "Yes, sir." (Implies: "Done").
                         3. Know the difference: for simple calls like "Hey, Steve!", the preferred speech is simply "Yes, sir?" (Implies: "What's your request?")
                         4. Strict Command Matching: NEVER invent commands. Check the AVAILABLE COMMANDS list.
                         """).build();
 
     private static final PromptComponent first_boot = PromptComponent.builder().header("first boot system instructions")
-            .content("""
-                This is the first boot call, which means system was just started.
-                This system instruction is generated automatically.
-                Wake up time is 8:00 AM. This is when you should play the alarm.
-                No need to say anything when you schedule the alarm.
-                """).build();
+            .content(Configuration.FIRST_BOOT_INSTRUCTIONS).build();
 
 }

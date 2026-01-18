@@ -1,18 +1,16 @@
 package com.daviipkp.smartsteve.services;
 
+import com.daviipkp.smartsteve.Configuration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.util.List;
 
 @Service
 public class SearchService {
-
-    @Value("${hcsearch.api.key}")
-    private String API_KEY;
-    private static final String BASE_URL = "https://search.hackclub.com/res/v1/web/search";
 
     private final RestClient restClient;
 
@@ -22,16 +20,9 @@ public class SearchService {
 
     public String searchAndSummarize(String query) {
         try {
-            System.out.println(">>> Buscando na internet: " + query);
             BraveResponse response = restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("search.hackclub.com")
-                            .path("/res/v1/web/search")
-                            .queryParam("q", query)
-                            .queryParam("count", 5)
-                            .build())
-                    .header("Authorization", "Bearer " + API_KEY)
+                    .uri(URI.create(Configuration.SEARCH_PROVIDER))
+                    .header("Authorization", "Bearer " + Configuration.SEARCH_API_KEY)
                     .retrieve()
                     .body(BraveResponse.class);
 
@@ -39,22 +30,21 @@ public class SearchService {
                 return formatResultsForLLM(response.web().results());
             }
 
-            return "Sem resultados na internet.";
+            return "No results!";
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return "Erro ao acessar a internet: " + e.getMessage();
+            return "Error trying to access the internet: " + e.getMessage();
         }
     }
 
     private String formatResultsForLLM(List<SearchResult> results) {
         StringBuilder sb = new StringBuilder();
-        sb.append("CONTEXTO DA INTERNET (Informação Atualizada):\n");
+        sb.append("Internet context (up to date information):\n");
 
         for (SearchResult r : results) {
             sb.append("- [").append(r.title()).append("]\n");
-            sb.append("  Resumo: ").append(r.description()).append("\n");
-            // sb.append("  Link: ").append(r.url()).append("\n"); // Opcional, o LLM não clica em links
+            sb.append("  Content: ").append(r.description()).append("\n");
+            sb.append("  Source: ").append(r.url()).append("\n");
             sb.append("\n");
         }
         return sb.toString();

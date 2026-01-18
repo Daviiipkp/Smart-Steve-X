@@ -1,9 +1,8 @@
 package com.daviipkp.smartsteve.services;
 
-import com.daviipkp.SteveJsoning.SteveJsoning;
-import com.daviipkp.smartsteve.Instance.ChatMessage;
+import com.daviipkp.SteveCommandLib.SteveCommandLib;
+import com.daviipkp.smartsteve.Configuration;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.vosk.Model;
@@ -11,25 +10,20 @@ import org.vosk.Recognizer;
 import org.springframework.stereotype.Service;
 
 import javax.sound.sampled.*;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Future;
 
 @Service
 public class EarService {
 
     private final KeyboardService kb;
     private final DualBrainService brain;
-    private final VoiceService voiceService;
     private TargetDataLine microphone;
     private volatile boolean isPaused = false;
     @Getter
     private boolean voiceTyping;
 
-    public EarService(KeyboardService kb, DualBrainService brain, VoiceService voiceService) {
+    public EarService(KeyboardService kb, DualBrainService brain) {
         this.kb = kb;
         this.brain = brain;
-        this.voiceService = voiceService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -38,7 +32,7 @@ public class EarService {
     }
 
     public void stopListening() {
-        System.out.println(">>> Paused listening...");
+        SteveCommandLib.systemPrint(">>> Paused listening...");
         this.isPaused = true;
         if (microphone != null && microphone.isOpen()) {
             microphone.stop();
@@ -47,7 +41,7 @@ public class EarService {
     }
 
     public void resumeListening() {
-        System.out.println(">>> Listening again...");
+        SteveCommandLib.systemPrint(">>> Listening again...");
         if (microphone != null && microphone.isOpen()) {
             microphone.start();
         }
@@ -62,18 +56,15 @@ public class EarService {
             DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 
             if (!AudioSystem.isLineSupported(info)) {
-                System.err.println("!!!!!!!!!");
+                System.err.println("Error with Audio System.");
                 return;
             }
-
             microphone = (TargetDataLine) AudioSystem.getLine(info);
             microphone.open(format);
             microphone.start();
 
             byte[] buffer = new byte[4096];
             int bytesRead;
-
-            System.out.println("Listening!");
 
             while (true) {
 
@@ -85,11 +76,11 @@ public class EarService {
                 bytesRead = microphone.read(buffer, 0, buffer.length);
 
                 if(bytesRead > 0) {
-                    if(isVoiceTyping()) {
+                    if(isVoiceTyping() && Configuration.VOICE_TYPING_FEATURE) {
                         if(recognizer.acceptWaveForm(buffer, bytesRead)) {
                             String jsonResult = recognizer.getResult();
                             String text = extractTextFromVosk(jsonResult);
-                            if(text.contains("stop")) {
+                            if(text.contains(Configuration.VOICE_TYPING_STOP_STRING)) {
                                 DualBrainService.setVoiceTyping(false);
                                 continue;
                             }
@@ -111,17 +102,14 @@ public class EarService {
                         if (recognizer.acceptWaveForm(buffer, bytesRead)) {
                             String jsonResult = recognizer.getResult();
                             String text = extractTextFromVosk(jsonResult);
-                            if (text.contains("over")) {
-                                if(text.contains("steve")) {
-                                    text = text.replace("over", "");
-                                    System.out.println("User said: " + text);
-
-                                    brain.processCommand(text);
-                                }else{
-                                    System.out.println("Ignoring (no steve): " + text);
+                            if (text.contains(Configuration.VOICE_START_WORD) && Configuration.USE_VOICE_START_WORD) {
+                                if (text.contains(Configuration.VOICE_END_WORD) && Configuration.USE_VOICE_END_WORD) {
+                                    text = text.replace(Configuration.VOICE_END_WORD, "");
+                                    if(Configuration.SHOW_VOICE_TEXT_DEBUG) {
+                                        SteveCommandLib.systemPrint("User said: " + text);
+                                    }
+                                    brain.processUserPrompt(text);
                                 }
-                            }else{
-                                System.out.println("Ignoring (no over)" + text);
                             }
                         }
                     }

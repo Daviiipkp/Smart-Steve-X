@@ -8,11 +8,14 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class VoiceService {
 
-    private static final String PIPER_FOLDER = "D:\\Coding\\Projects\\smartsteve\\piper";
-    private static final String PIPER_EXE = PIPER_FOLDER + "\\piper.exe";
-    private static final String MODEL_PATH = PIPER_FOLDER + "\\en_GB-alan-medium.onnx";
+    private static final String CURRENT_DIR = System.getProperty("user.dir");
 
-    private static final String TEMP_AUDIO_FILE = "D:\\Coding\\Projects\\smartsteve\\piper\\debug_audio.wav";
+    private static final String PIPER_FOLDER = CURRENT_DIR + File.separator + "piper";
+
+    private static final String PIPER_EXE = PIPER_FOLDER + File.separator + "piper.exe";
+
+    private static final String MODEL_PATH = PIPER_FOLDER + File.separator + "en_GB-alan-medium.onnx";
+    private static final String TEMP_AUDIO_FILE = PIPER_FOLDER + File.separator + "debug_audio.wav";
 
     private static Thread speakThread;
 
@@ -31,7 +34,7 @@ public class VoiceService {
                 s.resumeListening();
                 shutUp();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Error trying to speak (Play LLM response): " + e.getMessage());
             }
         });
         speakThread.start();
@@ -44,7 +47,7 @@ public class VoiceService {
                 playWavFile();
 
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Error trying to speak (Play LLM response): " + e.getMessage());
             } finally {
                 if (onFinish != null) {
                     onFinish.run();
@@ -84,17 +87,15 @@ public class VoiceService {
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {
-            System.err.println("ERRRRRRRRRRR");
+            System.err.println("Error while trying to generate Wav File.");
         } else {
             File f = new File(TEMP_AUDIO_FILE);
-            System.out.println("Size: " + f.length() + " bytes.");
         }
     }
 
     public static void setVolume(float newVolume) {
         if (newVolume < 0f) volume = 0f;
-        else if (newVolume > 1f) volume = 1f;
-        else volume = newVolume;
+        else volume = Math.min(newVolume, 1f);
     }
 
     private static void playWavFile() {
@@ -120,7 +121,7 @@ public class VoiceService {
             clip.close();
             audioStream.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error trying to play Wav File: " + e.getMessage());
         }
     }
 }

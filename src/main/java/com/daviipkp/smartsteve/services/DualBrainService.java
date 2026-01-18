@@ -2,6 +2,7 @@ package com.daviipkp.smartsteve.services;
 
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveJsoning.SteveJsoning;
+import com.daviipkp.smartsteve.Configuration;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.ChatMessage;
 import com.daviipkp.smartsteve.Instance.Protocol;
@@ -26,15 +27,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class DualBrainService {
-
-
-
     private final RestClient restClient;
     private final ChatRepository chatRepo;
-
-    private final VoiceService voiceService;
-    private final EarService earService;
-    private final SearchService searchService;
     private final LLMService llmS;
     @Getter
     @Setter
@@ -43,40 +37,29 @@ public class DualBrainService {
     @Value("${google.api.key}")
     private String googleApiKey;
 
-    public DualBrainService(ChatRepository arg0, VoiceService voiceService, @Lazy EarService earService, LLMService llmservice, SearchService searchService) {
-        this.searchService = searchService;
+    public DualBrainService(ChatRepository arg0, LLMService llmservice) {
         this.restClient = RestClient.create();
         this.chatRepo = arg0;
-        this.earService = earService;
-        this.voiceService = voiceService;
         this.llmS = llmservice;
         SteveCommandLib.debug(true);
     }
 
-    public String processCommand(String userPrompt) throws ExecutionException, InterruptedException {
-
-        CompletableFuture<ChatMessage> fResponse = CompletableFuture.supplyAsync(() -> {
-            return llmS.finalCallModel(Prompt.getDefaultPrompt(userPrompt), userPrompt);
-        });
+    public String processUserPrompt(String userPrompt) throws ExecutionException, InterruptedException {
+        CompletableFuture<ChatMessage> fResponse = CompletableFuture.supplyAsync(() -> llmS.finalCallModel(Prompt.getDefaultPrompt(userPrompt), userPrompt));
 
         CompletableFuture.allOf(fResponse).join();
 
-
         ChatMessage cResponse = fResponse.get();
-
         chatRepo.save(cResponse);
-        if(Constants.DATABASE_SAVING_DEBUG) {
-            SteveCommandLib.systemPrint(">> Memória salva no banco H2: " + cResponse);
+        if(Configuration.DATABASE_SAVING_DEBUG) {
+            SteveCommandLib.systemPrint(">>> Prompt memory saved on database: \n" + cResponse);
         }
-
         return cResponse.getSteveResponse();
     }
 
     public String getContext() {
         List<ChatMessage> messages = chatRepo.findTop3ByOrderByTimestampDesc();
-
         Collections.reverse(messages);
-
         if(messages.isEmpty()) {
             return "";
         }
@@ -101,71 +84,19 @@ public class DualBrainService {
         SearchRequest request = SearchRequest.query(query)
                 .withTopK(5)
                 .withSimilarityThreshold(0.5);
-
         List<Document> r = vectorStore.similaritySearch(request);
-        if(Constants.MEMORY_DEBUG) {
+        if(Configuration.MEMORY_DEBUG) {
             SteveCommandLib.systemPrint("Trying to get Memory Consult");
         }
-
         for (Document doc : r) {
             String c = doc.getContent();
             Map<String, Object> m = doc.getMetadata();
             sb.append("- ").append(c).append("\n");
-            if(Constants.MEMORY_DEBUG) {
-                SteveCommandLib.systemPrint("Memory added: " + c);
+            if(Configuration.MEMORY_DEBUG) {
+                SteveCommandLib.systemPrint("Memory added to prompt: " + c);
             }
         }
-
-
         return sb.toString();
-
-    }
-
-    public Map<Protocol, String> getProtocols(int top, String... query) {
-        Map<Protocol, String> toReturn = new HashMap<>();
-        if(query.length == 0 || (query.length == 1 && query[0].equals(""))) {
-            return toReturn;
-        }
-        VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
-        String q = String.join(" ", query);
-        SearchRequest request = SearchRequest.query(q)
-                .withTopK(top)
-                .withSimilarityThreshold(0.5);
-
-
-        List<Document> r;
-
-        try {
-            r = vectorStore.similaritySearch(request);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-
-        if(Constants.MEMORY_DEBUG) {
-            SteveCommandLib.systemPrint("Trying to get Similar protocol");
-        }
-
-
-        for (Document doc : r) {
-            String c = doc.getContent();
-            Map<String, Object> m = doc.getMetadata();
-            try {
-                String objType = (String)m.get("type");
-                if(objType.equals("protocol")) {
-                    toReturn.put(SteveJsoning.parse(c, Protocol.class), doc.getId());
-                    if(Constants.MEMORY_DEBUG) {
-                        SteveCommandLib.systemPrint("Similar added: " + c);
-                    }
-                }
-            }catch (Exception e) {
-
-            }
-
-        }
-
-
-        return toReturn;
 
     }
 

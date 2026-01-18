@@ -26,16 +26,13 @@ public class KeyboardService {
         StringSelection s = new StringSelection(text);
         Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
         cb.setContents(s, s);
-
         try {
             robot.keyPress(KeyEvent.VK_CONTROL);
             clickButton(KeyEvent.VK_V);
             robot.keyRelease(KeyEvent.VK_CONTROL);
-
         }catch (Exception e){
             e.printStackTrace();
         }
-
     }
 
     public void clickButton(int key) {

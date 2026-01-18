@@ -5,10 +5,12 @@ import com.daviipkp.SteveCommandLib.instance.InstantCommand;
 import com.daviipkp.SteveJsoning.SteveJsoning;
 import com.daviipkp.SteveJsoning.annotations.CommandDescription;
 import com.daviipkp.SteveJsoning.annotations.Describe;
+import com.daviipkp.smartsteve.Configuration;
 import com.daviipkp.smartsteve.Constants;
 import com.daviipkp.smartsteve.Instance.Protocol;
 import com.daviipkp.smartsteve.services.DualBrainService;
 import com.daviipkp.smartsteve.services.LLMService;
+import com.daviipkp.smartsteve.services.ProtocolsService;
 import com.daviipkp.smartsteve.services.SpringContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.ai.document.Document;
@@ -37,7 +39,7 @@ public class AddCommandToProtocolCommand extends InstantCommand {
         setCommand(new Runnable() {
             @Override
             public void run() {
-                DualBrainService dbs = SpringContext.getBean(DualBrainService.class);
+                ProtocolsService dbs = SpringContext.getBean(ProtocolsService.class);
                 VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
                 Map<Protocol, String> p = dbs.getProtocols(1, name);
                 if(p.isEmpty()) {
@@ -62,8 +64,8 @@ public class AddCommandToProtocolCommand extends InstantCommand {
 
                 vectorStore.add(List.of(doc));
 
-                if(Constants.MEMORY_DEBUG) {
-                    SteveCommandLib.systemPrint("saved: " + content);
+                if(Configuration.MEMORY_DEBUG) {
+                    SteveCommandLib.systemPrint("Saved protocol as:\n" + content);
                 }
 
             }
