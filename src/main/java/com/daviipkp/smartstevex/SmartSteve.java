@@ -6,12 +6,14 @@ import com.daviipkp.smartstevex.prompt.Prompt;
 import com.daviipkp.smartstevex.services.LLMService;
 import com.daviipkp.smartstevex.services.SpringContext;
 import lombok.Getter;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
+@SpringBootApplication
 public class SmartSteve {
 
     @Getter
