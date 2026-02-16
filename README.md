@@ -55,11 +55,6 @@ spring:
         username: postgres
         password: password
         driver-class-name: org.postgresql.Driver
-    ai:
-        vectorstore:
-            pgvector:
-                initialize-schema: true
-                index-type: HNSW
 
     jpa:
         database-platform: org.hibernate.dialect.PostgreSQLDialect
