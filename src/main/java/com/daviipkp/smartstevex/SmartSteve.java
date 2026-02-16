@@ -6,18 +6,69 @@ import com.daviipkp.smartstevex.prompt.Prompt;
 import com.daviipkp.smartstevex.services.LLMService;
 import com.daviipkp.smartstevex.services.SpringContext;
 import lombok.Getter;
+import org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration;
+import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.retry.RetryUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.client.RestClientCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {OpenAiAutoConfiguration.class})
+@EnableScheduling
 public class SmartSteve {
 
     @Getter
     private static List<Class<? extends Command>> commandList;
+
+    @Primary
+    @Bean
+    public EmbeddingModel customEmbeddingModel(
+            RestClient.Builder restClientBuilder,
+            WebClient.Builder webClientBuilder) {
+
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setSupportedMediaTypes(List.of(
+                MediaType.APPLICATION_JSON,
+                MediaType.valueOf(Configuration.EMBEDDING_EVENT_STREAM_TYPE)
+        ));
+
+        restClientBuilder.messageConverters(converters -> converters.add(0, converter));
+
+        OpenAiApi openAiApi = new OpenAiApi(
+                Configuration.EMBEDDING_URL,
+                Configuration.EMBEDDING_API_KEY,
+                restClientBuilder,
+                webClientBuilder,
+                new DefaultResponseErrorHandler()
+        );
+
+        return new OpenAiEmbeddingModel(
+                openAiApi,
+                MetadataMode.EMBED,
+                OpenAiEmbeddingOptions.builder()
+                        .withModel(Configuration.EMBEDDING_MODEL)
+                        .build(),
+                RetryUtils.DEFAULT_RETRY_TEMPLATE
+        );
+    }
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(SmartSteve.class)
@@ -58,6 +109,8 @@ public class SmartSteve {
             commandList = Utils.getRegisteredCommands(Configuration.USER_COMMAND_PACKAGE);
         }
 
+        SteveCommandLib.debug(true);
+
 
         for (String arg : args) {
             if (arg.equals("--FirstBoot")) {
@@ -66,4 +119,10 @@ public class SmartSteve {
         }
 
     }
+
+    @Scheduled(fixedDelay = 50)
+    public void meuTickComDelay() throws InterruptedException {
+        SteveCommandLib.tick(50);
+    }
+
 }

@@ -41,19 +41,22 @@ public class VoiceService {
     }
 
     public static void speak(String text, Runnable onFinish) {
-        new Thread(() -> {
+        shutUp();
+        speakThread = new Thread(() -> {
             try {
                 generateWavFile(text);
+                EarService s = SpringContext.getBean(EarService.class);
+                s.stopListening();
+
                 playWavFile();
 
+                s.resumeListening();
+                shutUp();
             } catch (Exception e) {
                 System.out.println("Error trying to speak (Play LLM response): " + e.getMessage());
-            } finally {
-                if (onFinish != null) {
-                    onFinish.run();
-                }
             }
-        }).start();
+        });
+        speakThread.start();
     }
 
     public static void shutUp() {

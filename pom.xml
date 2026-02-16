@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.daviipkp</groupId>
     <artifactId>smartstevex</artifactId>
-    <version>1.0</version>
+    <version>v1.0.0</version>
     <name>smartstevex</name>
     <description>LLM-based voice interface for Commands</description>
     <url/>

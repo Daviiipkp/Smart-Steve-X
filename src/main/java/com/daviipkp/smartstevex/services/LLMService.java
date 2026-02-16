@@ -7,6 +7,7 @@ import com.daviipkp.smartstevex.Configuration;
 import com.daviipkp.smartstevex.Instance.ChatMessage;
 import com.daviipkp.smartstevex.Instance.SteveResponse;
 import com.daviipkp.smartstevex.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -107,23 +108,27 @@ public class LLMService {
     }
 
 
-    public ChatMessage finalCallModel(String fullPromptText, String userPrompt) {
+    public ChatMessage finalCallModel(String fullPromptText, String userPrompt) throws JsonProcessingException {
+        HttpResponse<String> response = null;
         try {
-            HttpResponse<String> response = sendRequest(fullPromptText);
-
-            if (response.statusCode() != 200) {
-                System.err.println("Error: \n" + response.statusCode() + " Body: \n" + response.body());
-                return null;
-            }
-
-            processCommands(response.body());
-
-            return new ChatMessage(userPrompt, SteveJsoning.valueAtPath("/choices/0/message/content", response.body()));
-
+            response = sendRequest(fullPromptText);
         } catch (Exception e) {
             System.out.println("Exception caught with message: " + e.getMessage());
         }
-        return null;
+
+        if (response == null){
+            throw new RuntimeException("Could not get LLM response. Check your endpoint and API Key.");
+        }
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Error: " + response.statusCode() + "\n Body: " + response.body());
+        }
+
+        if(Configuration.STEVE_RESPONSE_DEBUG) {
+            SteveCommandLib.systemPrint("Steve's raw response: " + response.body());
+        }
+        processCommands(response.body());
+
+        return new ChatMessage(userPrompt, SteveJsoning.valueAtPath("/choices/0/message/content", response.body()));
     }
 
     public void finalCallModel(String fullPromptText) {

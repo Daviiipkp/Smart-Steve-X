@@ -8,13 +8,6 @@ spring:
         password: password
         driver-class-name: org.postgresql.Driver
     ai:
-        openai:
-            api-key: example.api.key
-            embedding:
-                base-url: https://ai.hackclub.com/proxy
-                options:
-                    model: openai/text-embedding-3-small
-                    dimensions: 1536
         vectorstore:
             pgvector:
                 initialize-schema: true

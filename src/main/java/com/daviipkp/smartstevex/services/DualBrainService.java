@@ -39,12 +39,29 @@ public class DualBrainService {
     }
 
     public String processUserPrompt(String userPrompt) throws ExecutionException, InterruptedException {
-        CompletableFuture<ChatMessage> fResponse = CompletableFuture.supplyAsync(() -> llmS.finalCallModel(Prompt.getDefaultPrompt(userPrompt), userPrompt));
+        CompletableFuture<ChatMessage> fResponse = null;
+
+            fResponse = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return llmS.finalCallModel(Prompt.getDefaultPrompt(userPrompt), userPrompt);
+                } catch (JsonProcessingException e) {
+                    System.out.println("Problem processing json: " + e.getMessage());
+                    return null;
+                } catch (RuntimeException e) {
+                    return null;
+                }
+            });
+
 
         CompletableFuture.allOf(fResponse).join();
 
         ChatMessage cResponse = fResponse.get();
-        chatRepo.save(cResponse);
+        if(cResponse == null) {
+            return null;
+        }
+        if(chatRepo != null) {
+            chatRepo.save(cResponse);
+        }
         if(Configuration.DATABASE_SAVING_DEBUG) {
             SteveCommandLib.systemPrint(">>> Prompt memory saved on database: \n" + cResponse);
         }
@@ -93,6 +110,7 @@ public class DualBrainService {
             }
         }catch (Exception e) {
             System.err.println("Couldn't get Memory Consult. Error: " + e.getMessage());
+            return sb.toString();
         }
         return sb.toString();
 

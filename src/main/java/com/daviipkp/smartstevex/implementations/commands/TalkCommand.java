@@ -12,7 +12,7 @@ public class TalkCommand extends QueuedCommand {
     private String message;
 
     @Describe
-    private float volume;
+    private float volume = 50;
 
     private boolean audioCompleted = false;
 
