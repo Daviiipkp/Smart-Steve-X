@@ -6,23 +6,19 @@ import com.daviipkp.smartstevex.prompt.Prompt;
 import com.daviipkp.smartstevex.services.LLMService;
 import com.daviipkp.smartstevex.services.SpringContext;
 import lombok.Getter;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
-@SpringBootApplication
-@EnableScheduling
-public class SmartsteveApplication {
+public class SmartSteve {
 
     @Getter
     private static List<Class<? extends Command>> commandList;
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(SmartsteveApplication.class)
+        new SpringApplicationBuilder(SmartSteve.class)
                 .headless(false)
                 .run(args);
         java.security.Security.setProperty("networkaddress.cache.ttl", "-1");
@@ -55,7 +51,7 @@ public class SmartsteveApplication {
         }
 
         if(Configuration.USE_DEFAULT_COMMANDS) {
-            commandList = Utils.getRegisteredCommands("com.daviipkp.smartsteve.implementations.commands", Configuration.USER_COMMAND_PACKAGE);
+            commandList = Utils.getRegisteredCommands("com.daviipkp.smartstevex.implementations.commands", Configuration.USER_COMMAND_PACKAGE);
         }else{
             commandList = Utils.getRegisteredCommands(Configuration.USER_COMMAND_PACKAGE);
         }

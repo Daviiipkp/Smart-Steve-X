@@ -7,11 +7,13 @@ import com.daviipkp.smartstevex.Instance.Protocol;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class ProtocolsService {
 
     //SmartSteve is a way for DEVs implement their own command in a Voice-based-interface
@@ -32,7 +34,7 @@ public class ProtocolsService {
         try {
             r = vectorStore.similaritySearch(request);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Cound not similarity search. Error: " + e.getMessage());
         }
 
         if(Configuration.MEMORY_DEBUG) {

@@ -13,7 +13,7 @@ public class Utils {
 
     public static String getCommandNamesWithDesc() {
        StringBuilder builder = new StringBuilder();
-       for(Class<? extends Command> c : SmartsteveApplication.getCommandList()) {
+       for(Class<? extends Command> c : SmartSteve.getCommandList()) {
            builder.append(SteveJsoning.generateGuide(c));
        }
        return builder.toString();
@@ -34,7 +34,7 @@ public class Utils {
     }
 
     public static Command getCommandByName(String cmd) throws InstantiationException, IllegalAccessException {
-        for(Class<? extends Command> c : SmartsteveApplication.getCommandList()) {
+        for(Class<? extends Command> c : SmartSteve.getCommandList()) {
             if(c.getSimpleName().equals(cmd)) {
                 return c.newInstance();
             }

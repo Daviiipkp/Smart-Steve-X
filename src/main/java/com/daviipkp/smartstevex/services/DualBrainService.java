@@ -73,22 +73,26 @@ public class DualBrainService {
 
     public String getMemoryConsult(String query) {
         StringBuilder sb = new StringBuilder();
-        VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
+        try {
+            VectorStore vectorStore = SpringContext.getBean(VectorStore.class);
 
-        SearchRequest request = SearchRequest.query(query)
-                .withTopK(5)
-                .withSimilarityThreshold(0.5);
-        List<Document> r = vectorStore.similaritySearch(request);
-        if(Configuration.MEMORY_DEBUG) {
-            SteveCommandLib.systemPrint("Trying to get Memory Consult");
-        }
-        for (Document doc : r) {
-            String c = doc.getContent();
-            Map<String, Object> m = doc.getMetadata();
-            sb.append("- ").append(c).append("\n");
+            SearchRequest request = SearchRequest.query(query)
+                    .withTopK(5)
+                    .withSimilarityThreshold(0.5);
+            List<Document> r = vectorStore.similaritySearch(request);
             if(Configuration.MEMORY_DEBUG) {
-                SteveCommandLib.systemPrint("Memory added to prompt: " + c);
+                SteveCommandLib.systemPrint("Trying to get Memory Consult");
             }
+            for (Document doc : r) {
+                String c = doc.getContent();
+                Map<String, Object> m = doc.getMetadata();
+                sb.append("- ").append(c).append("\n");
+                if(Configuration.MEMORY_DEBUG) {
+                    SteveCommandLib.systemPrint("Memory added to prompt: " + c);
+                }
+            }
+        }catch (Exception e) {
+            System.err.println("Couldn't get Memory Consult. Error: " + e.getMessage());
         }
         return sb.toString();
 
