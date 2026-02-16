@@ -42,10 +42,6 @@ spring.datasource.url
 spring.datasource.username 
 spring.datasource.password
 spring.datasource.driver-class-name
-spring.ai.openai.api-key
-spring.ai.openai.embedding.base-url
-spring.ai.openai.embedding.options.model
-spring.ai.openai.embedding.options.dimensions
 ```
 And if you need any other specification, feel free to configure as well.
 Example:
@@ -59,18 +55,6 @@ spring:
         username: postgres
         password: password
         driver-class-name: org.postgresql.Driver
-    ai:
-        openai:
-            api-key: example.api.key
-            embedding:
-                base-url: https://ai.hackclub.com/proxy (FOR EXAMPLE!)
-                options:
-                    model: openai/text-embedding-3-small
-                    dimensions: 1536
-        vectorstore:
-            pgvector:
-                initialize-schema: true
-                index-type: HNSW
 
     jpa:
         database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -125,41 +109,50 @@ public class ComfortCommand extends QueuedCommand {
 There's a class called Configuration which you really should explore. Any field that is not set in Configuration class will prevent the program to start.
 Example configuration (with all the fields):
 ```
-        public void configure() {
-          Configuration.LLM_PROVIDER = "";
-          Configuration.LLM_API_KEY = Secret.LLM_API_KEY; //Make your own way to keep your API key a secret!
-          Configuration.LLM_MODEL_NAME = "";
-  
-          Configuration.SEARCH_API_KEY = Secret.SEARCH_API_KEY;
-          Configuration.SEARCH_PROVIDER = "";
-  
-          Configuration.PROTOCOL_SEARCH_NUMBER = 5;     //how many protocols will be sent to the LLM for it to decide which one you asked for
-  
-          Configuration.USER_COMMAND_PACKAGE = "com.daviipkp.steveproductivitypack.implementations.commands";    //that's an example of what I like to do
-  
-          Configuration.DO_WARM_UP = true;      //Creates the connection BEFORE needing it. Might spend like 1 or 2 tokens.
-          Configuration.USE_VOICE_START_WORD = true;    //Voice Start Word is a word that you must say for steve to listen to you
-          Configuration.USE_VOICE_END_WORD = true; //Voice End Word is also a word that you must say for steve to listen to you
-          Configuration.VOICE_TYPING_FEATURE = false; 
-          Configuration.CLEAR_MEMO_ON_STARTUP = false; //Clears your database on startup
-          Configuration.USE_DEFAULT_COMMANDS = true; //Adds a few default commands to steve's arsenal
-  
-          Configuration.SHOW_VOICE_TEXT_DEBUG = false;
-          Configuration.MEMORY_DEBUG = false;
-          Configuration.USER_PROMPT_DEBUG = false;
-          Configuration.STEVE_RESPONSE_DEBUG = false;
-          Configuration.DATABASE_SAVING_DEBUG = false;
-          Configuration.FINAL_PROMPT_DEBUG = false;
-          Configuration.PROMPT_LATENCY_DEBUG = false;
-          Configuration.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG = false;
-  
-          Configuration.VOICE_START_WORD = "steve";
-          Configuration.VOICE_END_WORD = "over";
-          Configuration.VOICE_TYPING_STOP_STRING = "terminate";
-          Configuration.FIRST_BOOT_INSTRUCTIONS = "System just initialized."; //Instructions to be sent if you use the argument '--FirstBoot' on program startup. Useful if you want a sequence to happen whenever you turn on your computer.
-          Configuration.ALARM_PATH = System.getProperty("user.dir") + java.io.File.separator + "alarm.mp3"; //If you use default "AlarmCommand", you must define a mp3 to be played as alarm.
-  
-          }
+        public static void configure() {
+	        // LLM
+	        Configuration.LLM_PROVIDER = "https://api.groq.com/openai/v1/chat/completions";
+	        Configuration.LLM_API_KEY = Secret.LLM_API_KEY;
+	        Configuration.LLM_MODEL_NAME = "openai/gpt-oss-120b";
+	
+	        // Embeddings
+	        Configuration.EMBEDDING_URL = "https://ai.hackclub.com/proxy";
+	        Configuration.EMBEDDING_API_KEY = Secret.EMBEDDING_API_KEY;
+	        Configuration.EMBEDDING_MODEL = "openai/text-embedding-3-small";
+	
+	        // Search
+	        Configuration.SEARCH_API_KEY = Secret.SEARCH_API_KEY;
+	        Configuration.SEARCH_PROVIDER = "https://search.hackclub.com/res/v1/web/search";
+	        Configuration.PROTOCOL_SEARCH_NUMBER = 5;
+	
+	        // Package path
+	        Configuration.USER_COMMAND_PACKAGE = "com.daviipkp.steveproductivitypack.implementations.commands";
+	
+	        // Booleans
+	        Configuration.DO_WARM_UP = true;
+	        Configuration.USE_VOICE_START_WORD = true;
+	        Configuration.USE_VOICE_END_WORD = true;
+	        Configuration.VOICE_TYPING_FEATURE = false;
+	        Configuration.CLEAR_MEMO_ON_STARTUP = false;
+	        Configuration.USE_DEFAULT_COMMANDS = true;
+	
+	        // Debug
+	        Configuration.SHOW_VOICE_TEXT_DEBUG = false;
+	        Configuration.MEMORY_DEBUG = false;
+	        Configuration.USER_PROMPT_DEBUG = false;
+	        Configuration.STEVE_RESPONSE_DEBUG = true;
+	        Configuration.DATABASE_SAVING_DEBUG = false;
+	        Configuration.FINAL_PROMPT_DEBUG = false;
+	        Configuration.PROMPT_LATENCY_DEBUG = false;
+	        Configuration.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG = false;
+	
+	        // Strings
+	        Configuration.VOICE_START_WORD = "steve";
+	        Configuration.VOICE_END_WORD = "over";
+	        Configuration.VOICE_TYPING_STOP_STRING = "terminate";
+	        Configuration.FIRST_BOOT_INSTRUCTIONS = "System initialized.";
+	        Configuration.ALARM_PATH = System.getProperty("user.dir") + java.io.File.separator + "alarm.mp3";
+	    }
 ```
 
 Then you can simply
