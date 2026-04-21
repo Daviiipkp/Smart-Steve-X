@@ -9,6 +9,13 @@ Requirements:
 - Java 21+
 - Postgres (pgvector extension recommended)
 - Microphone
+
+**Example video:**
+
+
+https://github.com/user-attachments/assets/de2af6c6-d93a-46c8-908f-6608104d7636
+
+
   
 **Quick Start**
 
