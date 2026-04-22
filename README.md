@@ -166,7 +166,7 @@ Then you can simply
   public static void main(String[] args) {
         configure();
 
-        SmartsteveApplication.main(args);
+        SmartSteve.main(args);
     }
 ```
 
