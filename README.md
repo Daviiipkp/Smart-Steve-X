@@ -1,5 +1,4 @@
 # Smart Steve X
-> The voice-first operating system.
 
 Smart Steve X is a Java framework that lets you easily create your own commands and give them as "recipes" to a LLM. You can choose your model and provider, and all commands that you create are automatically sent/parsed on every prompt. 
 
