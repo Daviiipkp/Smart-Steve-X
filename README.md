@@ -34,7 +34,7 @@ Add Smart Steve to your project.
     <dependency>
 	    <groupId>com.github.Daviiipkp</groupId>
 	    <artifactId>Smart-Steve-X</artifactId>
-	    <version>v1.0.0</version>
+	    <version>v1.0.1</version>
 	</dependency>
   </dependencies>
 ```
