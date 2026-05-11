@@ -3,7 +3,14 @@ package com.daviipkp.smartstevex.services;
 import org.springframework.stereotype.Service;
 import javax.sound.sampled.*;
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 public class VoiceService {
@@ -20,6 +27,64 @@ public class VoiceService {
     private static Thread speakThread;
 
     private static float volume = 1;
+
+    public static boolean isPiperHere() {
+        return new File(PIPER_EXE).exists();
+    }
+
+    public static boolean downloadPiper() {
+        String DOWNLOAD_URL = "https://cloud.daviipkp.org/s/aPmseGW3KjryEJb/download";
+        String ZIP_FILE_PATH = CURRENT_DIR + File.separator + "piper.zip";
+
+        try {
+            Files.copy(URI.create(DOWNLOAD_URL).toURL().openStream(), Paths.get(ZIP_FILE_PATH), StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            System.out.println("Couldn't download Piper! Check for updates..?");
+            return false;
+        }
+
+        try {
+            unzip(ZIP_FILE_PATH, DOWNLOAD_URL);
+        } catch (IOException e) {
+            System.out.println("Piper was downloaded successfully, but we were unable to extract it. Check the file piper.zip for corruption!");
+            return false;
+        }
+
+        try {
+            Files.delete(Paths.get(ZIP_FILE_PATH));
+        } catch (IOException e){
+            System.out.println("Couldn't delete Piper.zip from your folder.");
+        }
+
+
+        return true;
+    }
+
+    public static void unzip(String zipFilePath, String destDir) throws IOException {
+        File dir = new File(destDir);
+        if (!dir.exists()) dir.mkdirs();
+
+        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath))) {
+            ZipEntry entry = zipIn.getNextEntry();
+            
+            while (entry != null) {
+                Path filePath = Paths.get(destDir).resolve(entry.getName()).normalize();
+                if (!filePath.startsWith(Paths.get(destDir).normalize())) {
+                    throw new IOException("Entrada ZIP inválida: " + entry.getName());
+                }
+
+                if (entry.isDirectory()) {
+                    Files.createDirectories(filePath);
+                } else {
+                    Files.createDirectories(filePath.getParent());
+                    Files.copy(zipIn, filePath, StandardCopyOption.REPLACE_EXISTING);
+                }
+                zipIn.closeEntry();
+                entry = zipIn.getNextEntry();
+            }
+            zipIn.close();
+        }
+    }
 
     public static void speak(String text) {
         shutUp();

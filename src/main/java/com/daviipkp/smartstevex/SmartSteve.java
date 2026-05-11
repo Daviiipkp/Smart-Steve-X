@@ -5,6 +5,8 @@ import com.daviipkp.SteveCommandLib.instance.Command;
 import com.daviipkp.smartstevex.prompt.Prompt;
 import com.daviipkp.smartstevex.services.LLMService;
 import com.daviipkp.smartstevex.services.SpringContext;
+import com.daviipkp.smartstevex.services.VoiceService;
+
 import lombok.Getter;
 import org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration;
 import org.springframework.ai.document.MetadataMode;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.client.RestClientCustomizer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
@@ -71,13 +74,23 @@ public class SmartSteve {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(SmartSteve.class)
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(SmartSteve.class)
                 .headless(false)
                 .run(args);
         java.security.Security.setProperty("networkaddress.cache.ttl", "-1");
 
         if(Configuration.DO_WARM_UP) {
             LLMService.warmUp();
+        }
+
+        if(!VoiceService.isPiperHere()) {
+            System.out.println("Piper was not found! Attempting to download it...");
+            if(!VoiceService.downloadPiper()) {
+                context.close();
+            }else{
+                System.out.println("Piper downloaded successfully!");
+            }
+            
         }
 
         boolean crash = false;
