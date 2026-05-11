@@ -69,6 +69,15 @@ spring:
             ddl-auto: update
         show-sql: true
 ```
+If you are running a Debian/Ubuntu-based environment, I recommend using the exact commands below to start a PostgreSQL database with all the necessary dependencies. Just remember to change the password if needed:
+```
+sudo apt-get update -qq
+sudo apt-get install -y postgresql-16 postgresql-contrib postgresql-16-pgvector
+sudo service postgresql start
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
+```
+Yes, the pgvector extension is required.
+
 
 
 ### **3. Create your first Command**
@@ -116,50 +125,45 @@ public class ComfortCommand extends QueuedCommand {
 There's a class called Configuration which you really should explore. Any field that is not set in Configuration class will prevent the program to start.
 Example configuration (with all the fields):
 ```
-        public static void configure() {
-	        // LLM
-	        Configuration.LLM_PROVIDER = "https://api.groq.com/openai/v1/chat/completions";
-	        Configuration.LLM_API_KEY = Secret.LLM_API_KEY;
-	        Configuration.LLM_MODEL_NAME = "openai/gpt-oss-120b";
-	
-	        // Embeddings
-	        Configuration.EMBEDDING_URL = "https://ai.hackclub.com/proxy";
-	        Configuration.EMBEDDING_API_KEY = Secret.EMBEDDING_API_KEY;
-	        Configuration.EMBEDDING_MODEL = "openai/text-embedding-3-small";
-	
-	        // Search
-	        Configuration.SEARCH_API_KEY = Secret.SEARCH_API_KEY;
-	        Configuration.SEARCH_PROVIDER = "https://search.hackclub.com/res/v1/web/search";
-	        Configuration.PROTOCOL_SEARCH_NUMBER = 5;
-	
-	        // Package path
-	        Configuration.USER_COMMAND_PACKAGE = "com.daviipkp.steveproductivitypack.implementations.commands";
-	
-	        // Booleans
-	        Configuration.DO_WARM_UP = true;
-	        Configuration.USE_VOICE_START_WORD = true;
-	        Configuration.USE_VOICE_END_WORD = true;
-	        Configuration.VOICE_TYPING_FEATURE = false;
-	        Configuration.CLEAR_MEMO_ON_STARTUP = false;
-	        Configuration.USE_DEFAULT_COMMANDS = true;
-	
-	        // Debug
-	        Configuration.SHOW_VOICE_TEXT_DEBUG = false;
-	        Configuration.MEMORY_DEBUG = false;
-	        Configuration.USER_PROMPT_DEBUG = false;
-	        Configuration.STEVE_RESPONSE_DEBUG = true;
-	        Configuration.DATABASE_SAVING_DEBUG = false;
-	        Configuration.FINAL_PROMPT_DEBUG = false;
-	        Configuration.PROMPT_LATENCY_DEBUG = false;
-	        Configuration.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG = false;
-	
-	        // Strings
-	        Configuration.VOICE_START_WORD = "steve";
-	        Configuration.VOICE_END_WORD = "over";
-	        Configuration.VOICE_TYPING_STOP_STRING = "terminate";
-	        Configuration.FIRST_BOOT_INSTRUCTIONS = "System initialized.";
-	        Configuration.ALARM_PATH = System.getProperty("user.dir") + java.io.File.separator + "alarm.mp3";
-	    }
+	public static void configure() {
+
+        Dotenv dotenv = Dotenv.load();
+
+        Configuration.LLM_PROVIDER = "https://ai.hackclub.com/proxy/v1/chat/completions";
+        Configuration.LLM_API_KEY = dotenv.get("LLM_API_KEY");
+        Configuration.LLM_MODEL_NAME = "google/gemini-3.1-flash-lite";
+
+        Configuration.SEARCH_API_KEY = dotenv.get("SEARCH_API_KEY");
+        Configuration.SEARCH_PROVIDER = "";
+
+        Configuration.EMBEDDING_API_KEY = dotenv.get("LLM_API_KEY");
+        Configuration.EMBEDDING_MODEL = "google/gemini-embedding-2-preview";
+        Configuration.EMBEDDING_URL = "embedding model url"; //You might get a stacktrace it this is not filled correctly.
+
+        Configuration.PROTOCOL_SEARCH_NUMBER = 5;
+
+        Configuration.DO_WARM_UP = true;
+        Configuration.USE_VOICE_START_WORD = true;
+        Configuration.USE_VOICE_END_WORD = true;
+        Configuration.VOICE_TYPING_FEATURE = false;
+        Configuration.CLEAR_MEMO_ON_STARTUP = false;
+        Configuration.USE_DEFAULT_COMMANDS = true;
+
+        Configuration.SHOW_VOICE_TEXT_DEBUG = false;
+        Configuration.MEMORY_DEBUG = false;
+        Configuration.USER_PROMPT_DEBUG = false;
+        Configuration.STEVE_RESPONSE_DEBUG = false;
+        Configuration.DATABASE_SAVING_DEBUG = false;
+        Configuration.FINAL_PROMPT_DEBUG = false;
+        Configuration.PROMPT_LATENCY_DEBUG = false;
+        Configuration.PROMPT_COMPONENTS_CONTENT_EMPTY_DEBUG = false;
+
+        Configuration.VOICE_START_WORD = "steve";
+        Configuration.VOICE_END_WORD = "over";
+        Configuration.VOICE_TYPING_STOP_STRING = "terminate";
+        Configuration.FIRST_BOOT_INSTRUCTIONS = "System initialized.";
+        Configuration.ALARM_PATH = System.getProperty("user.dir") + java.io.File.separator + "alarm.mp3";
+    }
 ```
 
 Then you can simply
