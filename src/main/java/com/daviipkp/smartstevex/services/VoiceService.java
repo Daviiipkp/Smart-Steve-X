@@ -70,7 +70,7 @@ public class VoiceService {
             while (entry != null) {
                 Path filePath = Paths.get(destDir).resolve(entry.getName()).normalize();
                 if (!filePath.startsWith(Paths.get(destDir).normalize())) {
-                    throw new IOException("Entrada ZIP inválida: " + entry.getName());
+                    throw new IOException("Invalid ZIP Entry: " + entry.getName());
                 }
 
                 if (entry.isDirectory()) {
