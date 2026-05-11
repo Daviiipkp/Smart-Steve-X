@@ -44,7 +44,7 @@ public class VoiceService {
         }
 
         try {
-            unzip(ZIP_FILE_PATH, DOWNLOAD_URL);
+            unzip(ZIP_FILE_PATH, PIPER_FOLDER);
         } catch (IOException e) {
             System.out.println("Piper was downloaded successfully, but we were unable to extract it. Check the file piper.zip for corruption!");
             return false;
