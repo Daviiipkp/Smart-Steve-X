@@ -22,12 +22,14 @@ public class Utils {
     public static List<Class<? extends Command>> getRegisteredCommands(String... packages) {
         List<Class<? extends Command>> list = new ArrayList<>();
         for(String s : packages) {
-            for(Class<?> c : new Reflections(s).getTypesAnnotatedWith(CommandDescription.class)) {
+            if(s != null) {
+                for(Class<?> c : new Reflections(s).getTypesAnnotatedWith(CommandDescription.class)) {
                 if(Command.class.isAssignableFrom(c)) {
                     list.add(c.asSubclass(Command.class));
                 }else {
                     System.out.println(">>> Ignoring command '" + c.getName() + "' because it does not extend Command class.");
                 }
+            }
             }
         }
         return list;

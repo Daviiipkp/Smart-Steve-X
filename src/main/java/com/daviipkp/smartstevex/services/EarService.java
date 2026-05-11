@@ -28,7 +28,9 @@ public class EarService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        new Thread(this::startListening).start();
+        if(VoiceService.isPiperHere()) {
+            new Thread(this::startListening).start();
+        }
     }
 
     public void stopListening() {

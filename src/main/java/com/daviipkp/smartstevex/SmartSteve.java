@@ -3,6 +3,7 @@ package com.daviipkp.smartstevex;
 import com.daviipkp.SteveCommandLib.SteveCommandLib;
 import com.daviipkp.SteveCommandLib.instance.Command;
 import com.daviipkp.smartstevex.prompt.Prompt;
+import com.daviipkp.smartstevex.services.EarService;
 import com.daviipkp.smartstevex.services.LLMService;
 import com.daviipkp.smartstevex.services.SpringContext;
 import com.daviipkp.smartstevex.services.VoiceService;
@@ -89,9 +90,12 @@ public class SmartSteve {
                 context.close();
             }else{
                 System.out.println("Piper downloaded successfully!");
+                context.getBean(EarService.class).onApplicationReady();
             }
             
         }
+
+        
 
         boolean crash = false;
         for(Field f : Configuration.class.getDeclaredFields()) {
