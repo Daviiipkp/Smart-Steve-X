@@ -49,6 +49,7 @@ spring.datasource.username
 spring.datasource.password
 spring.datasource.driver-class-name
 ```
+Yes, you need to setup your own database.
 And if you need any other specification, feel free to configure as well.
 Example:
 ```
