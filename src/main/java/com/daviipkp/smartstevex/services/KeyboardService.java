@@ -11,20 +11,24 @@ import java.awt.event.KeyEvent;
 public class KeyboardService {
 
     private Robot robot;
-    private final boolean isHeadless;
+    private boolean isHeadless;
 
     public KeyboardService() {
         this.isHeadless = GraphicsEnvironment.isHeadless();
 
         if (this.isHeadless) {
-            System.out.println("Headless environment detected!");
+            System.out.println("no screen detected.");
             this.robot = null;
         } else {
             try {
                 this.robot = new Robot();
                 this.robot.setAutoDelay(40);
-            } catch (AWTException e) {
-                System.err.println("Error " + e.getMessage());
+                System.out.println("graphics interface detected.");
+                
+            } catch (Throwable t) { 
+                System.err.println("system informed having a screen but no connection: " + t.getMessage());
+
+                this.isHeadless = true; 
                 this.robot = null;
             }
         }
@@ -32,19 +36,18 @@ public class KeyboardService {
 
     public void typeText(String text) {
         if (this.isHeadless || this.robot == null) {
-            System.out.println("KeyboardService ignored 'typeText'.");
             return;
         }
 
-        StringSelection s = new StringSelection(text);
-        Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
-        cb.setContents(s, s);
         try {
+            StringSelection s = new StringSelection(text);
+            Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+            cb.setContents(s, s);
             robot.keyPress(KeyEvent.VK_CONTROL);
             clickButton(KeyEvent.VK_V);
             robot.keyRelease(KeyEvent.VK_CONTROL);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable t) {
+            System.err.println("error typing: " + t.getMessage());
         }
     }
 
@@ -53,7 +56,11 @@ public class KeyboardService {
             return;
         }
         
-        robot.keyPress(key);
-        robot.keyRelease(key);
+        try {
+            robot.keyPress(key);
+            robot.keyRelease(key);
+        } catch (Throwable t) {
+            System.err.println("error trying to click button: " + t.getMessage());
+        }
     }
 }
