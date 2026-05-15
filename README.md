@@ -79,7 +79,6 @@ sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
 Yes, the pgvector extension is required.
 
 
-
 ### **3. Create your first Command**
 As of now we have 5 primitive types of commands:
 - InstantCommand, that is only executed once and ends;
@@ -126,9 +125,7 @@ There's a class called Configuration which you really should explore. Any field 
 Example configuration (with all the fields):
 ```
 	public static void configure() {
-
         Dotenv dotenv = Dotenv.load();
-
         Configuration.LLM_PROVIDER = "https://ai.hackclub.com/proxy/v1/chat/completions";
         Configuration.LLM_API_KEY = dotenv.get("LLM_API_KEY");
         Configuration.LLM_MODEL_NAME = "google/gemini-3.1-flash-lite";
@@ -138,7 +135,7 @@ Example configuration (with all the fields):
 
         Configuration.EMBEDDING_API_KEY = dotenv.get("LLM_API_KEY");
         Configuration.EMBEDDING_MODEL = "google/gemini-embedding-2-preview";
-        Configuration.EMBEDDING_URL = "embedding model url"; //You might get a stacktrace it this is not filled correctly.
+        Configuration.EMBEDDING_URL = "https://ai.hackclub.com/proxy/"; //You might get a stacktrace it this is not filled correctly.
 
         Configuration.PROTOCOL_SEARCH_NUMBER = 5;
 
@@ -170,7 +167,6 @@ Then you can simply
 ```
   public static void main(String[] args) {
         configure();
-
         SmartSteve.main(args);
     }
 ```
