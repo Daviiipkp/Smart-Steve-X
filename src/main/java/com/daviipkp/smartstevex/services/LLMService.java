@@ -34,30 +34,30 @@ public class LLMService {
 
     private long lastTick = 0;
 
-    public static void warmUp() {
-        new Thread(() -> {
-            try {
-                String jsonBody = """
-                {
-                    "model": "llama-3.1-8b-instant",
-                    "messages": [{"role": "user", "content": "hi"}],
-                    "max_tokens": 1
-                }
-                """;
+    // public static void warmUp() {
+    //     new Thread(() -> {
+    //         try {
+    //             String jsonBody = """
+    //             {
+    //                 "model": "llama-3.1-8b-instant",
+    //                 "messages": [{"role": "user", "content": "hi"}],
+    //                 "max_tokens": 1
+    //             }
+    //             """;
 
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(defaultProvider))
-                        .header("Authorization", "Bearer " + apiKey)
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                        .build();
-                HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+    //             HttpRequest request = HttpRequest.newBuilder()
+    //                     .uri(URI.create(defaultProvider))
+    //                     .header("Authorization", "Bearer " + apiKey)
+    //                     .header("Content-Type", "application/json")
+    //                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+    //                     .build();
+    //             HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
-            } catch (Exception e) {
-                System.err.println("error on Warm-up: " + e.getMessage());
-            }
-        }).start();
-    }
+    //         } catch (Exception e) {
+    //             System.err.println("error on Warm-up: " + e.getMessage());
+    //         }
+    //     }).start();
+    // }
 
     @Scheduled(fixedRate = 50)
     private void tick() {

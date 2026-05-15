@@ -81,7 +81,7 @@ public class SmartSteve {
         java.security.Security.setProperty("networkaddress.cache.ttl", "-1");
 
         if(Configuration.DO_WARM_UP) {
-            LLMService.warmUp();
+            //LLMService.warmUp();
         }
 
         if(!VoiceService.isPiperHere()) {
